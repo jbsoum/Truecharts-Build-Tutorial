@@ -6,7 +6,7 @@ You should also have everything you need to add and remove apps from this setup 
 
 ## Initial Requirements
 
-**1. A system capable of running a homelab server**
+1. **A system capable of running a homelab server**
     - See here for recommended system requirements from TrueNAS: [TrueNAS - SCALE Hardware Guide](https://www.truenas.com/docs/scale/23.10/gettingstarted/scalehardwareguide/)
     - See here for recommended system requirements from TrueCharts: [Truecharts - Recommended System Requirements](https://truecharts.org/manual/systemrequirements/)
     - Learn from my mistakes, and pay heed to the requirement that your **apps run on a separate SSD pool with at least 250GB**
@@ -34,10 +34,10 @@ You should also have everything you need to add and remove apps from this setup 
       - A processor with at least 4 CPU cores
       - At least 16 GB of ECC RAM, plus 1GB of ECC RAM for each TB of available space in your pool
 
-**2. A system running TrueNAS SCALE**
+2. **A system running TrueNAS SCALE**
     - See here for Cobia 23.10 install instructions: [TrueNAS Installation Guide](https://www.truenas.com/docs/scale/23.10/gettingstarted/)
 
-**3. A working internet connection**
+3. **A working internet connection**
     - you should be able to ping github and truecharts:
   ```
   ping https://github.com
@@ -49,9 +49,9 @@ You should also have everything you need to add and remove apps from this setup 
   ping https://tccr.io
   ```
 
-**4. A working SSH connection so that you can access your TrueNAS terminal remotely**
+4. **A working SSH connection so that you can access your TrueNAS terminal remotely**
    
-**5. TrueCharts catalogs [added to the repository](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts)**
+5. **TrueCharts catalogs [added to the repository](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts)**
 
      
 ## Apps Lab Step One: Data Sharing
