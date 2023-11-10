@@ -39,12 +39,15 @@ You should also have everything you need to add and remove apps from this setup 
 
 3. A working internet connection
   - you should be able to ping github and truecharts:
-  -
   ```
   ping https://github.com
   ```
-  - ```ping https://truecharts.org```
-  - ```ping https://tccr.io```
+  ```
+  ping https://truecharts.org
+  ```
+  ```
+  ping https://tccr.io
+  ```
 
 4. A working SSH connection so that you can access your TrueNAS terminal remotely
    
