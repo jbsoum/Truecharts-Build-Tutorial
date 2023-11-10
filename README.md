@@ -38,7 +38,7 @@ You should also have everything you need to add and remove apps from this setup 
     - See here for Cobia 23.10 install instructions: [TrueNAS Installation Guide](https://www.truenas.com/docs/scale/23.10/gettingstarted/)
 
 3. **A working internet connection**
-    - you should be able to ping github and truecharts:
+    - you should be able to ping github and truecharts *from your TrueNAS server*:
   ```
   ping https://github.com
   ```
@@ -50,11 +50,33 @@ You should also have everything you need to add and remove apps from this setup 
   ```
 
 4. **A working SSH connection so that you can access your TrueNAS terminal remotely**
-   
-5. **TrueCharts catalogs [added to the repository](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts)**
+        -- I understand that SSH is cryptic for those unfamiliar with what it is or how it works, so I'll try to demystify the process
+        -- The idea is that you, the client, wants to generate a set of keys, a *public key* and a *private key*
+        -- The public key is like your address, it lets other people know who you are
+        -- The private key is the secret algorithm that's used to encrypt your connection with whatever device you are connecting to, aka the server
+        > **NEVER SHARE YOUR PRIVATE KEY WITH ANYONE** 🤫
+        -- See below for a helpful picture from [ssh.com](https://www.ssh.com). You are the client, trying to connect to the server via SSH.
+       
+       ![A visual of how SSH works...you are the client, trying to ssh into the server...](https://www.ssh.com/hubfs/Imported_Blog_Media/SSH_simplified_protocol_diagram-2.png)
 
-     
-## Apps Lab Step One: Data Sharing
+       Let's walk through the steps required to generate a set of host keys for your laptop, or desktop, or whatever device you want to use to connect to your server.
+       You can set up more than one device, but setting that up is a bit more complex. If you're here, you're probably not ready for all of that yet.
+       We're going to use OpenSSH, which is available by default on Linux or Mac. 
+       If you're on Windows, here's some helpful instructions for getting OpenSSH up and running on the command line: [Microsoft - OpenSSH instructions](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse?tabs=gui)
+       There is Putty, if you want, I guess.
+       Anyways, let's generate a set of public and private keys to SSH into our server.
+       ```
+       ssh-keygen -t ed25519 -f /path/to/save/your/private/key
+       1. Generate an ssh key with ssh-keyg
+   
+6. **TrueCharts catalogs [added to the repository](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts)**
+
+-----
+
+## Apps Pool Setup
+### Step One: Setup your Apps Pool
+    - You want this to be a pool with at least one SSD drive, with at least 250GB
+    - Follow [this guide] from TrueNAS to get your pool operational
 
 ## Apps Lab Step Two: Reverse Proxy
 
