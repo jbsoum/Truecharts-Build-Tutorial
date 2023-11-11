@@ -383,9 +383,28 @@ For your storage pool, consider RAIDZ1/2/3 or mirrored VDEVs
 
 -----
 
-### Step One: Setup your Apps Pool
-    - You want this to be a pool with at least one SSD drive, with at least 250GB
-    - Follow [this guide] from TrueNAS to get your pool operational
+### Step One: Set up your Apps Pool
+
+1. In the Web GUI, go to the Apps tab
+
+![AppsInstalledAppsScreenNoApps](https://www.truenas.com/docs/images/SCALE/Apps/AppsInstalledAppsScreenNoApps.png)
+
+2. The first time you open the Applications screen, it displays an *Apps Service Not Configured* status on the screen header.
+
+![AppsServiceNotConfigured](https://www.truenas.com/docs/images/SCALE/Apps/AppsServiceNotConfigured.png)
+
+3. Click *Settings* -> *Choose Pool* and select the ```ssd``` pool we created above for our Apps cluster
+
+![AppsChoosePoolForApps](https://www.truenas.com/docs/images/SCALE/Apps/AppsChoosePoolForApps.png)
+
+4. After an Apps storage pool is configured, the status changes to *Apps Service Running*.
+
+-----
+
+### Step Two: Add the TrueCharts catalogs to your system
+See [this guide](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts) from TrueCharts to get the right catalogs added
+- You'll need at least ```stable```, ```enterprise```, and  ```operators``` trains
+- The ```incubator``` train is for what can be considered 'beta' charts, use them at your own peril.
 
 ### Step Two: Reverse Proxy
 
