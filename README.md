@@ -60,7 +60,7 @@ You should also have everything you need to add and remove apps from this setup 
 ## Step One: Set up TrueNAS SCALE Bootable USB
 1. First, download the installer from here, this should be the latest Cobia build: [Download TrueNAS SCALE](https://www.truenas.com/download-truenas-scale/)
 2. Next, you'll want to burn this to a thumb drive, using something like [Rufus](https://rufus.ie/) on Windows.
-3. If on Windows, use [Rufus](https://rufus.ie/) to burn the iso to the USB and skip to step 6.
+3. If on Windows, use [Rufus](https://rufus.ie/) to burn the iso to the USB and skip to step 8.
 4. On Linux, you'll want to follow the instructions below, pulled from here: [Preparing the Install File](https://www.truenas.com/docs/scale/23.10/gettingstarted/install/installingscale/#preparing-the-install-file)
 5. Connect your empty USB drive and run this command in the terminal of the Linux machine you downloaded the TrueNAS iso to:
 ```
@@ -116,9 +116,29 @@ After following the steps to install, reboot the system and remove the install m
 
 -----
 
+## Step 3: Accessing the Web GUI
+1. After removing the USB and rebooting the system, you should be presented with the Console Setup screen
+
+![ConsoleSetupMenuSCALE](https://www.truenas.com/docs/images/SCALE/CLI/ConsoleSetupMenuSCALE.png)
+
+2. At the top of this screen is the local IP address of the Web GUI
+
+3. From any computer on the same network as your TrueNAS server, you should be able to enter that address and see the Web GUI Login Screen
+    - For example, if your Web GUI is at ```https://192.168.1.10:443```, enter that into a web browser on a computer connected to the same network as your server
+  
+![LoginScreenSCALE](https://www.truenas.com/docs/images/SCALE/Login/LoginScreenSCALE.png)
+
+4. Enter the administrator username and password you set up in **Step Two**
+
+5. At this point, you should be logged into the TrueNAS Web GUI!
+
+6. Let's take a quick break, we've accomplished a lot at this point 😌👍🏼
+
+7. *After your break*, check this guide out for a detailed explaination of everything you can do in the Web GUI: [TrueNAS SCALE - UI Reference Guide](https://www.truenas.com/docs/scale/scaleuireference/) 
+
+-----
+
 ## Step One: Set up the SCALE Network
-
-
 
 1. **Set up the TrueNAS Scale Network**
     - Go to *Network*, and for the interface (ethernet port) which is connected to the internet, all the way to the right, click the little pencil icon to Configure
