@@ -386,6 +386,8 @@ Let's take a break from server stuff and create a domain name for our server!
 
 What's that? You don't know anything about domain names?
 
+### Step 1: Getting a domain name
+
 Take a look at this quick lesson from [Free Code Camp](https://www.freecodecamp.org): [What is DNS?](https://www.freecodecamp.org/news/what-is-dns/)
 
 Basically, DNS is the system the internet uses to map IP addresses to domain names like https://your-cool-server.xyz
@@ -397,12 +399,28 @@ If you want your own snazzy domain, check out [Namecheap](https://www.namecheap.
 
 Once you have a domain, we're going to manage DNS services through [Cloudfare](https://www.cloudflare.com/). Don't worry, it's free for what we're using it for!
 
+Here are some instructions from Namecheap on [how to use a 3rd party DNS service with your Namecheap domain](https://www.namecheap.com/support/knowledgebase/article.aspx/767/10/how-to-change-dns-for-a-domain/).
+The process for other domain providers is similar.
+
 You can also transfer ownership rights from Namecheap to Cloudfare, if you'd like. Here's a [guide from Cloudfare](https://blog.cloudflare.com/a-step-by-step-guide-to-transferring-domains-to-cloudflare/) on how to do that.
+
+### Step 2: Resolving the domain through [Cloudfare](https://dash.cloudflare.com) DNS
+
+Yeah, we're using Cloudfare. Why? Well, it's the only DNS service Truecharts currently supports, plus it's free for what we need it for. 
+As TrueCharts grows their ecosystem, I'm sure there will be other options. 
 
 Basically, we're going to add an ```A Record``` to link your server's IP address to your newly acquired domain
 
 Then, we're going to add a ```CNAME Record``` for each app, with the URL convention \<app\>.\<your-snazzy-domain\>.com
 The CNAME Record forwards requests made to a particular alias to a hostname or IP address of our choosing.
+
+1. Create a free account at [Cloudfare](https://dash.cloudflare.com)
+   
+2. Upon joining, Cloudfare should be asking you to add a site. If you already had an account, there's a link for adding a site somewhere on the dashboard. Add the domain you acquired previously.
+
+3. Don't do any of the paid stuff (unless you want to, ofc).
+   
+4. Once your domain is ready, click on it on your dashboard, and click on *DNS* in the left toolbar.   
 
 -----
 
