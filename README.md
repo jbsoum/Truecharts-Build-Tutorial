@@ -379,7 +379,34 @@ For your storage pool, consider RAIDZ1/2/3 or mirrored VDEVs
   
 -----
 
-## Part III: Set up the Apps Cluster
+## Part III: Set up a domain name for your server
+Okay, great job! You made it really far!
+
+Let's take a break from server stuff and create a domain name for our server!
+
+What's that? You don't know anything about domain names?
+
+Take a look at this quick lesson from [Free Code Camp](https://www.freecodecamp.org): [What is DNS?](https://www.freecodecamp.org/news/what-is-dns/)
+
+Basically, DNS is the system the internet uses to map IP addresses to domain names like https://your-cool-server.xyz
+
+First, you're going to need a domain name. If you don't want to pay for one, you can use free services like [Freenom](https://www.freenom.com).
+It should be noted that you don't have ownership or transfer rights over the domain you get.
+
+If you want your own snazzy domain, check out [Namecheap](https://www.namecheap.com/)
+
+Once you have a domain, we're going to manage DNS services through [Cloudfare](https://www.cloudflare.com/). Don't worry, it's free for what we're using it for!
+
+You can also transfer ownership rights from Namecheap to Cloudfare, if you'd like. Here's a [guide from Cloudfare](https://blog.cloudflare.com/a-step-by-step-guide-to-transferring-domains-to-cloudflare/) on how to do that.
+
+Basically, we're going to add an ```A Record``` to link your server's IP address to your newly acquired domain
+
+Then, we're going to add a ```CNAME Record``` for each app, with the URL convention \<app\>.\<your-snazzy-domain\>.com
+The CNAME Record forwards requests made to a particular alias to a hostname or IP address of our choosing.
+
+-----
+
+## Part IV: Set up the Apps Cluster
 
 -----
 
