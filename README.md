@@ -379,7 +379,106 @@ For your storage pool, consider RAIDZ1/2/3 or mirrored VDEVs
   
 -----
 
-## Part III: Set up a domain name for your server
+## Part III: Set up the Apps Cluster
+
+-----
+
+### Step One: Set up your Apps Pool
+
+1. In the Web GUI, go to the Apps tab
+
+![AppsInstalledAppsScreenNoApps](https://www.truenas.com/docs/images/SCALE/Apps/AppsInstalledAppsScreenNoApps.png)
+
+2. The first time you open the Applications screen, it displays an *Apps Service Not Configured* status on the screen header.
+
+![AppsServiceNotConfigured](https://www.truenas.com/docs/images/SCALE/Apps/AppsServiceNotConfigured.png)
+
+3. Click *Settings* -> *Choose Pool* and select the ```ssd``` pool we created above for our Apps cluster
+
+![AppsChoosePoolForApps](https://www.truenas.com/docs/images/SCALE/Apps/AppsChoosePoolForApps.png)
+
+4. After an Apps storage pool is configured, the status changes to *Apps Service Running*.
+
+
+### Step Two: Add the TrueCharts catalogs to your system
+See [this guide](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts) from TrueCharts to get the right catalogs added
+- You'll need at least ```stable```, ```enterprise```, and  ```operators``` trains
+- The ```incubator``` train is for what can be considered 'beta' charts, use them at your own peril.
+
+### Step Three: Add the base TrueCharts Operator charts
+- In the TrueNAS Web GUI, go to the *Apps* tab, then click on *Discover Apps*
+- You're going to install 3 charts from this screen: ```cloudnative-pg```, ```prometheus-operator```, and ```cert-manager```
+- You'll find these apps on the TrueCharts operators train
+    - Search for the chart name in the *Search Bar*
+    - Click on the tile for the app that shows up
+    - Click *Install*
+    - The Chart Config screen will show up, click *Install* and leave the settings as default for these charts
+
+You should see something like below in the Apps screen when you're done (3 apps that show *Running*)
+
+![An image of the 3 operator apps running](link.img)
+
+### Step Four: Install Heavyscript on your sever
+
+Remember those fancy ssh credentials we made in a prior step? It's time to use those!
+
+Open up a terminal or command line on the machine you set up security keys on (hopefully this one, lol)
+
+ssh into your server using the following command:
+
+```
+ssh <admin>@your-server.domain -p <YourSSHPort>
+```
+- \<admin\>@your-server.domain: \<admin\> is your admin account you set up when you installed TrueNAS (or root if you upgraded from an older version)
+- \<YourSSHPort\>: this is the port you set up on your TrueNAS SSH service, and forwarded on your router for this purpose
+- If everything works, it should ask you for your SSH passphrase. Enter it, and you're logged into your TrueNAS terminal!
+
+If that DIDN'T work, try the same command, using your server Static IP address we set above in TrueNAS's network configuration, and also on your router:
+
+```
+ssh <admin>@Your.Server.IP.Address -p <YourSSHPort>
+```
+
+If that ALSO DIDN'T work, something's wrong!
+- If the IP address didn't work, is the machine you're trying to connect from on the same network as your server?
+- Are you ***sure*** you forwarded that port on your router?
+- Are you ***sure*** that's the same port you set up in *System Settings* -> *Services* -> *SSH*?
+- Are you ***sure*** that's your TrueNAS Static IP address? Set up correctly in TrueNAS *Network* tab AND on your router? (check ```ifconfig -a``` in *System* -> *Shell*)
+- Are you ***sure*** you entered your SSH passphrase correctly?
+- Are you ***sure*** you copied your SSH public key's contents *entirely* and pasted them into the *Authorized Keys* section of your admin account in *Credentials* -> *Local Users*?
+
+If that DID work, you should be greeted with a welcome message from your server, and a command prompt that looks something like this:
+```
+<admin>@<Hostname>[~]:
+```
+- \<admin\>: this is your administrator account (or root)
+- \<Hostname\>: this is the hostname you set up in your *Network* settings
+- [~]: this means you are at the ```home``` directory of your administrator account on your server. Whatever path you are currently at will be displayed in these brackets
+
+NOW it's time to install [HeavyScript](https://github.com/Heavybullets8/heavy_script).
+What is HeavyScript? It's a bash script for managing TrueNAS charts, very helpful companion with TrueCharts
+
+From their github, you can install HeavyScript from the command line with just one line:
+```
+curl -s https://raw.githubusercontent.com/Heavybullets8/heavy_script/main/functions/deploy.sh | bash && source "$HOME/.bashrc" 2>/dev/null && source "$HOME/.zshrc" 2>/dev/null
+```
+Copy and paste that into your logged in ssh terminal, and press ```Enter```.
+
+From [their github](https://github.com/Heavybullets8/heavy_script#how-to-install), this command will:
+    -Download HeavyScript, then place you on the latest release
+    -Place HeavyScript in /root
+    -Make HeavyScript executable
+    -Allow you to run HeavyScript from any directory with heavyscript
+
+Check to see if the install went successfully by typing ```heavyscript``` into your SSH terminal. If you see HeavyScript launch, you're good to continue!
+
+Let's finally add a Cron Job for HeavyScript. We want it to run automatically once a day and:
+    - update 
+
+
+-----
+
+## Part IV: Set up a domain name for your server
 Okay, great job! You made it really far!
 
 Let's take a break from server stuff and create a domain name for our server!
@@ -431,8 +530,9 @@ The CNAME Record forwards requests made to a particular alias to a hostname or I
     - TTL: *Auto*
 
 6. That's it for now! We'll come back here later for a couple of things:
-    - Generate an API Token to update the DNS with our IP address dynamically
-        - aka we don't have to tell Cloudfare what our IP address is every day if our ISP is always changing it
+    - Generate an API Token to update our domains and aliases with Let's Encrypt certificates **automatically**
+        - aka we don't have to remember when our ssl certeficates are expiring for each of our apps
+        - AND each chart can get it's own automatically updated and validate certificate
         - we'll do that automatically with a Trueharts app we'll install on our homelab!
     - Add a ```CNAME Record``` for each app we want to access remotely
         - eg if we wanted to access the Whoogle chart, we would add a CNAME record for whoogle.your-snazzy-domain.something
@@ -442,32 +542,6 @@ Okay! Break time over! Let's get back to it!
 
 -----
 
-## Part IV: Set up the Apps Cluster
-
------
-
-### Step One: Set up your Apps Pool
-
-1. In the Web GUI, go to the Apps tab
-
-![AppsInstalledAppsScreenNoApps](https://www.truenas.com/docs/images/SCALE/Apps/AppsInstalledAppsScreenNoApps.png)
-
-2. The first time you open the Applications screen, it displays an *Apps Service Not Configured* status on the screen header.
-
-![AppsServiceNotConfigured](https://www.truenas.com/docs/images/SCALE/Apps/AppsServiceNotConfigured.png)
-
-3. Click *Settings* -> *Choose Pool* and select the ```ssd``` pool we created above for our Apps cluster
-
-![AppsChoosePoolForApps](https://www.truenas.com/docs/images/SCALE/Apps/AppsChoosePoolForApps.png)
-
-4. After an Apps storage pool is configured, the status changes to *Apps Service Running*.
-
------
-
-### Step Two: Add the TrueCharts catalogs to your system
-See [this guide](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts) from TrueCharts to get the right catalogs added
-- You'll need at least ```stable```, ```enterprise```, and  ```operators``` trains
-- The ```incubator``` train is for what can be considered 'beta' charts, use them at your own peril.
 
 ### Step Two: Reverse Proxy
 
