@@ -393,7 +393,7 @@ Take a look at this quick lesson from [Free Code Camp](https://www.freecodecamp.
 Basically, DNS is the system the internet uses to map IP addresses to domain names like https://your-cool-server.xyz
 
 First, you're going to need a domain name. If you don't want to pay for one, you can use free services like [Freenom](https://www.freenom.com).
-It should be noted that you don't have ownership or transfer rights over the domain you get.
+It should be noted that you don't have ownership or transfer rights over the domain you get from Freenom.
 
 If you want your own snazzy domain, check out [Namecheap](https://www.namecheap.com/)
 
@@ -411,7 +411,7 @@ As TrueCharts grows their ecosystem, I'm sure there will be other options.
 
 Basically, we're going to add an ```A Record``` to link your server's IP address to your newly acquired domain
 
-Then, we're going to add a ```CNAME Record``` for each app, with the URL convention \<app\>.\<your-snazzy-domain\>.com
+Later, we're going to add a ```CNAME Record``` for each app, with the URL convention \<app\>.\<your-snazzy-domain\>.com
 The CNAME Record forwards requests made to a particular alias to a hostname or IP address of our choosing.
 
 1. Create a free account at [Cloudfare](https://dash.cloudflare.com)
@@ -420,7 +420,25 @@ The CNAME Record forwards requests made to a particular alias to a hostname or I
 
 3. Don't do any of the paid stuff (unless you want to, ofc).
    
-4. Once your domain is ready, click on it on your dashboard, and click on *DNS* in the left toolbar.   
+4. Once your domain is ready, click on it on your dashboard, and click on *DNS* in the left toolbar.
+   
+5. We're going to add an ```A Record``` here, click the *Add Record* button
+    - Type: ```A```
+    - Name (required):```<your-snazzy-domain>.<something>```
+        - eg: ```example.com```
+    - IPv4 address: ```<Your.Server.IP.Address>```
+    - Proxy status: *Disabled*
+    - TTL: *Auto*
+
+6. That's it for now! We'll come back here later for a couple of things:
+    - Generate an API Token to update the DNS with our IP address dynamically
+        - aka we don't have to tell Cloudfare what our IP address is every day if our ISP is always changing it
+        - we'll do that automatically with a Trueharts app we'll install on our homelab!
+    - Add a ```CNAME Record``` for each app we want to access remotely
+        - eg if we wanted to access the Whoogle chart, we would add a CNAME record for whoogle.your-snazzy-domain.something
+        - once we set everything up, you should be able to access whoogle.your-snazzy-domain.com from anywhere with your credentials
+     
+Okay! Break time over! Let's get back to it!         
 
 -----
 
