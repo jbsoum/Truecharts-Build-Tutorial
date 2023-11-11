@@ -465,16 +465,41 @@ curl -s https://raw.githubusercontent.com/Heavybullets8/heavy_script/main/functi
 Copy and paste that into your logged in ssh terminal, and press ```Enter```.
 
 From [their github](https://github.com/Heavybullets8/heavy_script#how-to-install), this command will:
-    -Download HeavyScript, then place you on the latest release
-    -Place HeavyScript in /root
-    -Make HeavyScript executable
-    -Allow you to run HeavyScript from any directory with heavyscript
+
+- Download HeavyScript, then place you on the latest release
+- Place HeavyScript in ```/root```
+- Make HeavyScript executable
+- Allow you to run HeavyScript from any directory with ```heavyscript```
 
 Check to see if the install went successfully by typing ```heavyscript``` into your SSH terminal. If you see HeavyScript launch, you're good to continue!
 
 Let's finally add a Cron Job for HeavyScript. We want it to run automatically once a day and:
-    - update 
 
+- update the HeavyScript app
+- check for updates
+- Create and store a backup of the apps cluster
+
+Let's go to *System* -> *Advanced Settings*:
+
+![SystemAdvancedScreen](https://www.truenas.com/docs/images/SCALE/SystemSettings/SystemAdvancedScreen.png)
+
+In the *Cron Jobs* widget, click *Add*:
+![AdvancedSettingsCronJobWidget](https://www.truenas.com/docs/images/SCALE/SystemSettings/AdvancedSettingsCronJobWidget.png)
+
+In the *Add Cron Job* screen:
+    - *Run as User* = your administrator account
+    - *Schedule* = run daily at some time
+    - *Hide Standard Output*= unchecked (for email notifications)
+    - *Hide Standard Error*= unchecked (also for email notifications)
+    - *Command* = Use this to backup, update HeavyScript, and update any apps
+
+```
+bash /root/heavy_script/heavy_script.sh update --backup 14 --concurrent 10 --prune --rollback --sync --self-update
+```
+
+![](https://user-images.githubusercontent.com/20793231/229404447-6836ff1f-ba28-439e-99fe-745371f0f24c.png)
+
+> Confused about Cron Jobs? Wtf are those numbers, anyway? See below for a graphic. In the example job above
 
 -----
 
