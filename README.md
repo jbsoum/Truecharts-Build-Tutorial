@@ -11,8 +11,9 @@ You should also have everything you need to add and remove apps from this setup 
     - See here for recommended system requirements from TrueCharts: [Truecharts - Recommended System Requirements](https://truecharts.org/manual/systemrequirements/)
     - Learn from my mistakes, and pay heed to the requirement that your **apps run on a separate SSD pool with at least 250GB**
       - I built out a bunch of apps on a regular HDD mirrored pool and could not transfer everything over to an SSD pool, using **any kind of backup / restore methodology**
-    - For your boot pool, consider an SSD drive of at least 16GB
+    - For your boot pool, consider an SSD drive of at least 32GB
       - People used to use thumb drives for these, but I think these days, TrueNAS will [burn those out quick](https://www.truenas.com/community/threads/truenas-on-usb-drive.91273/)
+      - 16GB will be for the OS, and an additional 16GB can be used as a swap partition
     - For your data pool, consider RAIDZ1/2/3 or mirrored VDEVs
       - Internet searches will produce many opinions on whether you should go with Z1/2/3 or mirrored pools.
       - Basically, mirrored pools sacrifice capacity (at least half of your space will be redundancy) in exchange for speed
@@ -56,7 +57,7 @@ You should also have everything you need to add and remove apps from this setup 
 
 -----
 
-## Step One: Set up TrueNAS SCALE and the Administrator Account
+## Step One: Set up TrueNAS SCALE Bootable USB
 1. First, download the installer from here, this should be the latest Cobia build: [Download TrueNAS SCALE](https://www.truenas.com/download-truenas-scale/)
 2. Next, you'll want to burn this to a thumb drive, using something like [Rufus](https://rufus.ie/) on Windows.
 3. If on Windows, use [Rufus](https://rufus.ie/) to burn the iso to the USB and skip to step 6.
@@ -72,9 +73,50 @@ dd status=progress if=path/to/.iso of=path/to/USB
 7. Once this command completes, you'll have a bootable usb.
 8. Plug this into your server, and enter bios (usually mashing something like F12 at the bootup screen)
 9. In the BIOS screen, select the option to boot from your thumb drive. This should launch the TrueNAS Installer Console Setup. 
-10. See here for the guide on first time setup of TrueNAS: [TrueNAS Installer Console Setup](https://www.truenas.com/docs/scale/gettingstarted/install/installingscale/#using-the-truenas-installer-console-setup)
 
-## Step One: Set up the Scale Network
+
+## Step Two: Install TrueNAS from USB and set up the administrator account
+See here for the guide on first time setup of TrueNAS: [TrueNAS Installer Console Setup](https://www.truenas.com/docs/scale/gettingstarted/install/installingscale/#using-the-truenas-installer-console-setup)
+1. Select **Install/Upgrade**
+
+![SCALE Install Main Screen](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallMainScreen.png)
+
+2. Select the desired install drive
+
+![SCALEInstallDriveScreen](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallDriveScreen.png)
+    
+- You want to make sure you select the SSD drive you want to use as your boot drive
+
+Select **Yes**.
+
+![SCALEInstallWarningScreen](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallWarningScreen.png)
+
+3. Select **Fresh Install** to do a clean install of the downloaded version of TrueNAS SCALE. This erases the contents of the selected drive!
+
+![SCALEInstallUpgradeFresh](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallUpgradeFresh.png)
+
+When the operating system device has enough additional space, you can choose to allocate some space for a swap partition to improve performance. Select **Create Swap** and press Enter.
+
+![SCALEInstallPartitionScreen](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallPartitionScreen.png)
+
+When existing versions of TrueNAS are present on the device, you can choose **Install in new boot environment** to create a partition or **Format the boot device** to remove previous boot environments.
+
+![SCALEInstallUpdateMethodSelection](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallUpdateMethodSelection.png)
+
+4. Select option **1 Administrative user (admin)** and then **OK** to install SCALE, and create the admin user account. SCALE Bluefin has implemented rootless login. Create an admin account and password. The system retains root as a fallback but it is no longer the default. This account has full control over TrueNAS and is used to log in to the web interface. Set a strong password and protect it. We do not recommend selecting **3 Configure using Web UI**.
+![SCALEInstallerConsoleSetupAdminAccount](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallerConsoleSetupAdminAccount.png)
+
+Next, enter a password for the new admin user.
+
+![SCALEInstallerConsoleSetupAdminPassword](https://www.truenas.com/docs/images/SCALE/Install/SCALEInstallerConsoleSetupAdminPassword.png)
+
+5. Select Boot via UEFI at the TrueNAS Boot Mode prompt, then select OK and press Enter to begin the installation.
+
+After following the steps to install, reboot the system and remove the install media.
+
+-----
+
+## Step One: Set up the SCALE Network
 
 
 
