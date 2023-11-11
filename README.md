@@ -484,22 +484,77 @@ Let's go to *System* -> *Advanced Settings*:
 ![SystemAdvancedScreen](https://www.truenas.com/docs/images/SCALE/SystemSettings/SystemAdvancedScreen.png)
 
 In the *Cron Jobs* widget, click *Add*:
+
 ![AdvancedSettingsCronJobWidget](https://www.truenas.com/docs/images/SCALE/SystemSettings/AdvancedSettingsCronJobWidget.png)
 
 In the *Add Cron Job* screen:
-    - *Run as User* = your administrator account
-    - *Schedule* = run daily at some time
-    - *Hide Standard Output*= unchecked (for email notifications)
-    - *Hide Standard Error*= unchecked (also for email notifications)
-    - *Command* = Use this to backup, update HeavyScript, and update any apps
+
+- *Run as User* = your administrator account
+- *Schedule* = run daily at some time
+- *Hide Standard Output*= unchecked (for email notifications)
+- *Hide Standard Error*= unchecked (also for email notifications)
+- *Command* = Use this to backup, update HeavyScript, and update any apps
 
 ```
 bash /root/heavy_script/heavy_script.sh update --backup 14 --concurrent 10 --prune --rollback --sync --self-update
 ```
 
-![](https://user-images.githubusercontent.com/20793231/229404447-6836ff1f-ba28-439e-99fe-745371f0f24c.png)
+![HeavyScript Cron Job Example](https://user-images.githubusercontent.com/20793231/229404447-6836ff1f-ba28-439e-99fe-745371f0f24c.png)
 
-> Confused about Cron Jobs? Wtf are those numbers, anyway? See below for a graphic. In the example job above
+> Confused about Cron Jobs? Wtf are those numbers, anyway? See below for a graphic.
+
+![crontab-syntax](https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/crontab-syntax.webp)
+
+
+### Step 4: Disable SCALE's default LoadBalancer and install MetalLB instead
+
+See here for a guide from TrueCharts: [TrueCharts: MetalLB Setup Guide](https://truecharts.org/charts/enterprise/metallb-config/setup-guide/)
+
+1. Install ```metallb``` from the TrueCharts Operators train, use the default settings
+    -  If you encounter an error, run the below command from terminal and try to install again from the Web GUI:
+
+```
+k3s kubectl delete --grace-period 30 --v=4 -k https://github.com/truecharts/manifests/delete
+```
+
+2. Once ```metallb``` successfully installs, *then you can install* ```metallb-config```
+
+3. On the install screen, create a new entry under *Configure IP Address Pools Object*:
+    - *Name*: Enter a general name for this IP range. Something like apps or charts for this field is fine.
+    - *Auto Assign*: if you want MetalLB Services to auto-assign IPs from the configured address pool without needing to specify per app. Recommendation is to keep this checked. You can still specify an IP for apps as needed (see step 3).
+  
+4. Also on the install screen, create a single entry under *Configure Address Pools*:
+    - *Address Pool Entry*: Specify an IP range for MetalLB to assign IPs that is OUTSIDE your current DHCP range on your LAN. For example, if your DHCP range is ```192.168.1.100-192.168.1.255```, then your entry can be any range below ```192.168.1.100```. This entry can also be specified in CIDR format.
+> For users with VLANs or multiple subnets, you may create create additional address pool objects as needed.
+
+5. Also on the install screen, create a new entry under *Configure L2 Advertisements*.
+    - *Name*: Enter a basic name for your layer 2 advertisement.
+    - *Address Pool Entry*: This should match the name of the address pool created above (not the IP range itself).
+
+![metallb_guide_l2advertisement](https://truecharts.org/assets/images/metallb_guide_l2advertisement-f957198af0975b52e0fa12f98b3c219c.png)
+
+6. Finally, let's disable the Integrated Load Balancer by going to *Apps* -> *Settings*, then click on *Advanced Settings*, then uncheck *Enable Integrated Load Balancer*
+
+> This will trigger a restart of Kubernetes and all apps. After roughly 5-10 minutes, your apps will redeploy using the MetalLB-assigned IP addresses.
+    - You can verify that happened by running the command below in terminal:
+
+```
+k3s kubectl get svc -A
+```
+
+> If you have an IP conflict with a previously assigned address it will show as ```<pending>```. **Rebooting should fix this***
+
+7. That's it! We now have a more functional load balancer for our apps cluster. You can delve more into ```metallb```'s configuration options here: [MetalLB](https://metallb.universe.tf/configuration/)
+
+8. **Why did we do this?**
+    - SCALE's integrated Load Balancer doesn't allow us to specify unique IP addresses per apps, like you can with jails in TrueNAS CORE.
+    - ```metallb``` gives us this ability
+    - Now, when we set up an app, we can select *LoadBalancer* for apps we want to expose ports for, and *actually specify which IP we want the app to use*
+    - We can also leave this blank, and per our config settings, ```metallb``` will select an IP from our allowed range
+
+
+  
+![metallb_guide_addresspool_basic](https://truecharts.org/assets/images/metallb_guide_addresspool_basic-3a4c701591f41a719f49dc2879a662ca.png)
 
 -----
 
