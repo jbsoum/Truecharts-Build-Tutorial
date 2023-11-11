@@ -54,10 +54,13 @@ You should also have everything you need to add and remove apps from this setup 
 
 5. **TrueCharts catalogs [added to the repository](https://truecharts.org/manual/SCALE/guides/getting-started/#adding-truecharts)**
 
+-----
+
+## Part I: Setting up the TrueNAS System
 
 -----
 
-## Step One: Set up TrueNAS SCALE Bootable USB
+### Step One: Set up TrueNAS SCALE Bootable USB
 1. First, download the installer from here, this should be the latest Cobia build: [Download TrueNAS SCALE](https://www.truenas.com/download-truenas-scale/)
 2. Next, you'll want to burn this to a thumb drive, using something like [Rufus](https://rufus.ie/) on Windows.
 3. If on Windows, use [Rufus](https://rufus.ie/) to burn the iso to the USB and skip to step 8.
@@ -75,7 +78,7 @@ dd status=progress if=path/to/.iso of=path/to/USB
 9. In the BIOS screen, select the option to boot from your thumb drive. This should launch the TrueNAS Installer Console Setup. 
 
 
-## Step Two: Install TrueNAS from USB and set up the administrator account
+### Step Two: Install TrueNAS from USB and set up the administrator account
 See here for the guide on first time setup of TrueNAS: [TrueNAS Installer Console Setup](https://www.truenas.com/docs/scale/gettingstarted/install/installingscale/#using-the-truenas-installer-console-setup)
 1. Select **Install/Upgrade**
 
@@ -116,7 +119,7 @@ After following the steps to install, reboot the system and remove the install m
 
 -----
 
-## Step 3: Accessing the Web GUI
+### Step 3: Accessing the Web GUI
 1. After removing the USB and rebooting the system, you should be presented with the Console Setup screen
 
 ![ConsoleSetupMenuSCALE](https://www.truenas.com/docs/images/SCALE/CLI/ConsoleSetupMenuSCALE.png)
@@ -138,7 +141,7 @@ After following the steps to install, reboot the system and remove the install m
 
 -----
 
-## Step Four: Set up the SCALE Network
+### Step Four: Set up the SCALE Network
 
 1. **Set up the TrueNAS Scale Network**
     - Go to *Network*, and for the interface (ethernet port) which is connected to the internet, all the way to the right, click the little pencil icon to Configure
@@ -183,7 +186,7 @@ ifconfig -a
 
 -----
 
-## Step Five: Set up Terminal Access
+### Step Five: Set up Terminal Access
 - The idea here is that you're unlikely to have a monitor attached to your server at all times
 - There is a Shell you can access via the web GUI, but you should not expose that to the internet, and it's a bit finicky
 - So, without a monitor, how can you interact with the terminal? What if you're away from your desk?
@@ -233,7 +236,7 @@ If you can't stand OpenSSH, there is also Putty, if you want, I guess.
 
 ![ServicesSSHBasicSettingsGenOptionsSCALE](https://www.truenas.com/docs/images/SCALE/SystemSettings/ServicesSSHBasicSettingsGenOptionsSCALE.png)
 
-4. ** _On the client machine (the machine you'll be accessing the server from)_, generate an ssh key with ssh-keygen**
+4. **_On the client machine (the machine you'll be accessing the server from)_, generate an ssh key with ssh-keygen**
 ```
 ssh-keygen -t ed25519 -c <your@email.address> -f /path/to/save/your/private/key
 ```
@@ -251,8 +254,11 @@ ssh-keygen -t ed25519 -c <your@email.address> -f /path/to/save/your/private/key
         - For example, if you named your private key  ```/home/<YourUsername>/.ssh/root@example.com```,
         - then your public key will be ```/home/<YourUsername>/.ssh/root@example.com.pub```
 - After the key is generated, you'll see a cool ASCII graphic, then you'll be asked:
+
 > Enter passphrase (empty for no passphrase): [Type a passphrase]
+
 > Enter same passphrase again: [Type passphrase again]
+
 - If you leave both of these fields empty, then your SSH key can be used without a password. **I DO NOT RECOMMEND THIS**.
 - Lock your key with a secure password. That way, no one can use your key to gain access to your server without that passphrase.
 
@@ -286,6 +292,9 @@ cat /path/to/save/your/private/key.pub
 ![UserScreenUserDetails](https://www.truenas.com/docs/images/SCALE/Credentials/UserScreenUserDetails.png)
 
 - In this screen, we are going to paste the public key we copied in Step 5, and paste it in the *Authorized Keys* section
+
+![AddUserHomeDirAuthSCALE](https://www.truenas.com/docs/images/SCALE/Credentials/AddUserHomeDirAuthSCALE.png)
+
 - Make sure *SSH Password Login* is **UNCHECKED**
     - **Why are we doing this**?
     - Wellll, we don't want to use passwords to gain SSH access with the server.
@@ -298,22 +307,88 @@ ssh <YourAdminAccount>@<YourServerDomain> -p <YourSSHPort>
 
 -----
 
-## Step Two: Set up your pools
+## Part II: Pool Setup
 If you've been following along so far, you should be able to go to Storage in the TrueNAS GUI and see *at least* 3 unassigned disks.
 One of those disks should be an SSD that's at least 256GB, and the other 2+ should be mechanical drives. 
 
 ### SSD Pool - where your apps will go
 Click the **Create Pool** button in the ***Storage*** tab of the TrueNAS GUI.
 
+1. **Select a name for your SSD pool**
+    - People tend to choose something simple, all lower case without dashes or underscores
+    - For the purpose of this tutorial, well assume this pool is called ```ssd```
+    - Leave the drive unencrypted
+    - Click *Next*
+
+![PoolCreationWizardGeneralInfo](https://www.truenas.com/docs/images/SCALE/Storage/PoolCreationWizardGeneralInfo.png)
+
+2. **Add the SSD to your pool**
+    - For *Layout*, select *Stripe*
+    - Click *Manual Disk Selection* under *Advanced Options* 
+    - In the top right corner, click *Add* to add the only VDEV we'll need for this pool
+    - Select the SSD disk for your pool on the left, and drag it into your new VDEV on the right
+    - If you have a lot of disks, feel free to use the disk filters to help parse down the list to find your disk
+        - We will be setting up backups of our app directory, so disk redundancy isn't super necessary for this pool
+        - If you must, you can set up a 2-way or 3-way mirrored VDEV
+    - Click *Save Selection*, then click *Save and Go To Review*
+     
+![ManualSelectionScreen](https://www.truenas.com/docs/images/SCALE/Storage/ManualSelectionScreen.png)
+
+3. **Review your selection and create your pool**
+    - *Pool Name* should be what we set above, (eg ```ssd``` as in our example)
+    - *Data* under *Topology* should say something like ```1 x STRIPE|1 x #.## GiB (SSD)```
+    - If everything looks good, go ahead and click *Create Pool*
+
+![PoolCreationWizardReviewScreen](https://www.truenas.com/docs/images/SCALE/Storage/PoolCreationWizardReviewScreen.png)
+
+### Storage Pool - where your data will go
+At this point, we assume you have at least 2 unassigned disks left, all mechanical drives.
+For your storage pool, consider RAIDZ1/2/3 or mirrored VDEVs
+  - Internet searches will produce many opinions on whether you should go with Z1/2/3 or mirrored pools.
+  - Basically, mirrored pools sacrifice capacity (at least half of your space will be redundancy) in exchange for speed
+  - In terms of redundancy, RAIDZ2 is probably ideal
+  - In terms of performance, mirrored vdevs are faster, and I personally use them
 
 
-## Apps Pool Setup
+1. **Select a name for your storage pool**
+    - People tend to choose something simple, all lower case without dashes or underscores
+    - For the purpose of this tutorial, well assume this pool is called ```storage```
+    - Leave the drive unencrypted
+    - Click *Next*
+  
+2. **Add the HDDs to your storagepool**
+    - For *Layout*, select your chosen redundancy framework (hopefully NOT Stripe if you've been listening to me!)
+    - Under *Automated Disk Selection*, select the *Disk Size* that matches the size of your mechanical drives
+    - Under *Width*, this depends on your redundancy framework
+        - RAID Z1/2/3 is essentially 1 VDEV per pool
+        - Mirrored will create one VDEV per mirror
+        - Mirrors need to have at least two disks per VDEV
+        - So for a 2 way mirror (50% of HDD capacity spent on redundancy), select *2* for *Width*
+        - For a 3 way mirror (66.7% of HDD capacity spent on redundancy), select *3* for *Width*
+    - The *Number of VDEVs* will be limited by the number of disks you have and your redundancy framework
+    - Click *Save and Go To Review*
+  
+![PoolCreationWizardDataScreen](https://www.truenas.com/docs/images/SCALE/Storage/PoolCreationWizardDataScreen.png)
+
+3. **Review your selection and create your pool**
+    - *Pool Name* should be what we set above, (eg ```storage``` as in our example)
+    - *Data* under *Topology* should say something like ```<V> x STRIPE| <W> x #.## GiB (SSD)```
+        - <V> represents the number of VDEVs in your pool
+        - <W> represents the width you selected
+    - If everything looks good, go ahead and click *Create Pool*
+  
+-----
+
+## Part III: Set up the Apps Cluster
+
+-----
+
 ### Step One: Setup your Apps Pool
     - You want this to be a pool with at least one SSD drive, with at least 250GB
     - Follow [this guide] from TrueNAS to get your pool operational
 
-## Apps Lab Step Two: Reverse Proxy
+### Step Two: Reverse Proxy
 
-## Apps Lab Step Three: Single Sign On
+### Step Three: Single Sign On
 
-## Apps Lab Step Four: Installing other apps
+### Step Four: Installing other apps
