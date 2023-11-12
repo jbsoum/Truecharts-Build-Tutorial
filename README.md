@@ -506,56 +506,6 @@ bash /root/heavy_script/heavy_script.sh update --backup 14 --concurrent 10 --pru
 ![crontab-syntax](https://www.hostinger.com/tutorials/wp-content/uploads/sites/2/2021/09/crontab-syntax.webp)
 
 
-### Step 4: Disable SCALE's default LoadBalancer and install MetalLB instead
-
-See here for a guide from TrueCharts: [TrueCharts: MetalLB Setup Guide](https://truecharts.org/charts/enterprise/metallb-config/setup-guide/)
-
-1. Install ```metallb``` from the TrueCharts Operators train, use the default settings
-    -  If you encounter an error, run the below command from terminal and try to install again from the Web GUI:
-
-```
-k3s kubectl delete --grace-period 30 --v=4 -k https://github.com/truecharts/manifests/delete
-```
-
-2. Once ```metallb``` successfully installs, *then you can install* ```metallb-config```
-
-3. On the install screen, create a new entry under *Configure IP Address Pools Object*:
-    - *Name*: Enter a general name for this IP range. Something like apps or charts for this field is fine.
-    - *Auto Assign*: if you want MetalLB Services to auto-assign IPs from the configured address pool without needing to specify per app. Recommendation is to keep this checked. You can still specify an IP for apps as needed (see step 3).
-  
-4. Also on the install screen, create a single entry under *Configure Address Pools*:
-    - *Address Pool Entry*: Specify an IP range for MetalLB to assign IPs that is OUTSIDE your current DHCP range on your LAN. For example, if your DHCP range is ```192.168.1.100-192.168.1.255```, then your entry can be any range below ```192.168.1.100```. This entry can also be specified in CIDR format.
-> For users with VLANs or multiple subnets, you may create create additional address pool objects as needed.
-
-5. Also on the install screen, create a new entry under *Configure L2 Advertisements*.
-    - *Name*: Enter a basic name for your layer 2 advertisement.
-    - *Address Pool Entry*: This should match the name of the address pool created above (not the IP range itself).
-
-![metallb_guide_l2advertisement](https://truecharts.org/assets/images/metallb_guide_l2advertisement-f957198af0975b52e0fa12f98b3c219c.png)
-
-6. Finally, let's disable the Integrated Load Balancer by going to *Apps* -> *Settings*, then click on *Advanced Settings*, then uncheck *Enable Integrated Load Balancer*
-
-> This will trigger a restart of Kubernetes and all apps. After roughly 5-10 minutes, your apps will redeploy using the MetalLB-assigned IP addresses.
-    - You can verify that happened by running the command below in terminal:
-
-```
-k3s kubectl get svc -A
-```
-
-> If you have an IP conflict with a previously assigned address it will show as ```<pending>```. **Rebooting should fix this***
-
-7. That's it! We now have a more functional load balancer for our apps cluster. You can delve more into ```metallb```'s configuration options here: [MetalLB](https://metallb.universe.tf/configuration/)
-
-8. **Why did we do this?**
-    - SCALE's integrated Load Balancer doesn't allow us to specify unique IP addresses per apps, like you can with jails in TrueNAS CORE.
-    - ```metallb``` gives us this ability
-    - Now, when we set up an app, we can select *LoadBalancer* for apps we want to expose ports for, and *actually specify which IP we want the app to use*
-    - We can also leave this blank, and per our config settings, ```metallb``` will select an IP from our allowed range
-
-
-  
-![metallb_guide_addresspool_basic](https://truecharts.org/assets/images/metallb_guide_addresspool_basic-3a4c701591f41a719f49dc2879a662ca.png)
-
 -----
 
 ## Part IV: Set up a domain name for your server
@@ -622,8 +572,122 @@ Okay! Break time over! Let's get back to it!
 
 -----
 
+## Part V: App Cluster Network and Remote Access Set Up
 
-### Step Two: Reverse Proxy
+-----
+
+Now that our apps cluster is up and running, and we have a shiny new domain name with a DNS service ready to resove our domain, let's set up our network access.
+
+We'll want to set up a reverse proxy (```traefik```) that handles forwarding domain aliases (eg coolapp.shinyserver.com) to the apps in our cluster.
+
+We'll also set up Single Sign On using an LDAP server (```lldap```) and authentication middleware (```authelia```). 
+    - An LDAP server is essentially a single source of truth for usernames, passwords, and access groups for all of your apps and services which support LDAP. 
+    - Users will be able to log into the LDAP server and update their passwords directly
+    - The authentication middleware will look at the LDAP server to check usernames and passwords for access
+    - Apss which support LDAP will also check the server for access, so users won't need a different set of credentials for each app in your cluster they want to access
+    - Some apps will auto-create accounts for users with a valid LDAP entry if one doesn't exist already. 
+
+By the time we make it to the end of this section, we should have a framework for assigning different levels of access to apps based on group membership, and a single source of truth for usernames and passwords for most or possibly all of your apps!
+
+-----
+
+### Step 1: Change the default ports for the TrueNAS Web GUI
+
+1. Navigate to *System* -> *General Settings*, and click on the *Settings* button in the top-right of the *GUI* widget:
+
+![SystemGeneralScreen](https://www.truenas.com/docs/images/SCALE/SystemSettings/SystemGeneralScreen.png)
+
+2. Change *Web Interface HTTP Port* to ```81``` and *Web Interface HTTPS Port* to ```444``` and save
+    - **Why are we doing this?**
+    - Port 80 is the default port for external access to your network via the IP address via http, and 443 for https
+    - When you type ```http://google.com```, for example, the default end point would be to port ```80```
+    - If you typed ```https``` instead, that default end port would be ```443```
+    - When someone types ```http://your-awesome-server.xyz``` into a browser, they will be presented with whatever service is available at port 80 on your network
+    - If the above link was typed with ```https```, they would be presented with whatever service was available at port 443 on your network
+    - With TrueNAS on your network, ***that's the Web GUI!***
+    - We are changing that here, and we'll instead let ```traefik``` handle what services are presented when remote clients access those ports
+  
+The WebUI will now prompt you to restart the web server service, after which you will be automatically redirected to your dashboard through one of the new ports. 
+
+If you are not prompted to restart the web server service, you may restart the machine and manually navigate to the WebUI address followed by one of the new ports 
+
+eg. ```truenas.local:81```.
+
+![SystemGeneralGuiSettings](https://www.truenas.com/docs/images/SCALE/SystemSettings/SystemGeneralGuiSettings.png)
+
+-----
+
+### Step 2: Disable SCALE's default LoadBalancer and install MetalLB instead
+
+See here for a guide from TrueCharts: [TrueCharts: MetalLB Setup Guide](https://truecharts.org/charts/enterprise/metallb-config/setup-guide/)
+
+1. Install ```metallb``` from the TrueCharts Operators train, use the default settings
+    -  If you encounter an error, run the below command from terminal and try to install again from the Web GUI:
+
+```
+k3s kubectl delete --grace-period 30 --v=4 -k https://github.com/truecharts/manifests/delete
+```
+
+2. Once ```metallb``` successfully installs, *then you can install* ```metallb-config```
+
+3. On the install screen, create a new entry under *Configure IP Address Pools Object*:
+    - *Name*: Enter a general name for this IP range. Something like apps or charts for this field is fine.
+    - *Auto Assign*: if you want MetalLB Services to auto-assign IPs from the configured address pool without needing to specify per app. Recommendation is to keep this checked. You can still specify an IP for apps as needed (see step 3).
+  
+4. Also on the install screen, create a single entry under *Configure Address Pools*:
+    - *Address Pool Entry*: Specify an IP range for MetalLB to assign IPs that is OUTSIDE your current DHCP range on your LAN. For example, if your DHCP range is ```192.168.1.100-192.168.1.255```, then your entry can be any range below ```192.168.1.100```. This entry can also be specified in CIDR format.
+
+![metallb_guide_addresspool_basic](https://truecharts.org/assets/images/metallb_guide_addresspool_basic-3a4c701591f41a719f49dc2879a662ca.png)
+
+> For users with VLANs or multiple subnets, you may create create additional address pool objects as needed.
+
+5. Also on the install screen, create a new entry under *Configure L2 Advertisements*.
+    - *Name*: Enter a basic name for your layer 2 advertisement.
+    - *Address Pool Entry*: This should match the name of the address pool created above (not the IP range itself).
+
+![metallb_guide_l2advertisement](https://truecharts.org/assets/images/metallb_guide_l2advertisement-f957198af0975b52e0fa12f98b3c219c.png)
+
+6. Finally, let's disable the Integrated Load Balancer by going to *Apps* -> *Settings*, then click on *Advanced Settings*, then uncheck *Enable Integrated Load Balancer*
+
+> This will trigger a restart of Kubernetes and all apps. After roughly 5-10 minutes, your apps will redeploy using the MetalLB-assigned IP addresses.
+    - You can verify that happened by running the command below in terminal:
+
+```
+k3s kubectl get svc -A
+```
+
+> If you have an IP conflict with a previously assigned address it will show as ```<pending>```. **Rebooting should fix this***
+
+7. That's it! We now have a more functional load balancer for our apps cluster. You can delve more into ```metallb```'s configuration options here: [MetalLB](https://metallb.universe.tf/configuration/)
+
+8. **Why did we do this?**
+    - SCALE's integrated Load Balancer doesn't allow us to specify unique IP addresses per apps, like you can with jails in TrueNAS CORE.
+    - ```metallb``` gives us this ability
+    - Now, when we set up an app, we can select *LoadBalancer* for apps we want to expose ports for, and *actually specify which IP we want the app to use*
+    - We can also leave this blank, and per our config settings, ```metallb``` will select an IP from our allowed range
+
+-----
+
+### Step Three: Install Traefik for reverse proxy / ingress support
+
+1. Go to *Apps* in the Web GUI, click on Discover Apps, and install ```traefik``` from the TrueCharts enteerprise train
+
+2. On the *Install* screen, make the following changes under **Networking and Services**:
+
+- **Main Service** - *Loadbalancer IP*: select an IP in the allowable range you picked for ```metallb```
+- **TCP Service** - *Loadbalancer IP*: use the same IP you selected above 
+- *web Entrypoint Configuration* > Entrypoints port: Change port 9080 to port 80
+- *websecure Entrypoint Configuration* > Entrypoints port: Change port 9443 to port 443
+
+3. Click *Install*, and we're done!
+    - You can access your dashboard at the link in the *Notes* widget on the *Apps* tab for ```traefik```
+    - The link is ```http://Your.Selected.Loadbalancer.IP:9000/dashboard/```
+    - We'll come back here later to set up some authentication middleware
+  
+-----
+
+
+
 
 ### Step Three: Single Sign On
 
