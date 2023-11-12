@@ -745,7 +745,41 @@ The recommended API Token permissions from TrueCharts are below:
 
 -----
 
-### Step 5: Install Blocky DNS Service
+### Step 5: Install Cloudflareddns
+See [this guide](https://truecharts.org/charts/stable/cloudflareddns/setup-guide) from TrueCharts for the complete ```cloudflareddns``` tutorial
+
+Next, we're going to install ```cloudflareddns```. Note that this isn't necessary if your IP address from your ISP never changes.
+
+If it does, ```cloudflareddns``` will let Cloudflare know on a regular basis what your IP address is, so whatever it changes to is always tied to your domain.
+
+
+
+2. Let's go back to the [Cloudfare API Tokens](https://dash.cloudflare.com/profile/api-tokens) Dashboard
+    - Click *Create Token*
+    - Select *Edit Zone DNS template*.
+    - Let's call it ```cloudflareddns token``` and use the settings below:
+
+![cloudflare-token](https://truecharts.org/assets/images/cloudflare-token-ce3789f4134c14ef0cbd2e96e091682e.png)
+
+3. Make sure to save the resulting API token for the next step!
+
+2. Install ```cloudflareddns``` from the TrueCharts stable train
+
+3. On the Install screen, under *Cloudflareddns Configuration*, set *CF API Token* (not key!) to be the API Token you just generated
+    - Everything else can remain as default here
+  
+4. Also on the Install screen, under *Hosts, Zones and Record Types*, add the following settings:
+
+    - *Domain*: set to your DNS Zone A record (```your-cool-server.xyz```)
+    - *Zone*: set to ```DNS Zone ID``` found on the Cloudflare Overview Page for your domain.
+    - *Record Type*: ```A``` if you're only changing your main domain (which you should be if you're following this guide)
+  
+5. And that's it! Cloudflare should now be regularly notifed of what our IP is, and it should always be attached to our domain, even if our IP address is dynamic. 
+
+-----
+
+
+### Step 6: Install Blocky DNS Service
 See the original TrueCharts guide here: [TrueCharts - Blocky Setup Guide](https://truecharts.org/charts/enterprise/blocky/setup-guide/)
 
 1. First, let's install *Blocky* from the TrueCharts enterprise train
@@ -796,6 +830,13 @@ https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/pro.txt
     - You should be able to set Blocky as your local DNS server on your router if you wish
     - Every router is differnt in this regard, feel free to do an internet search for instructions
     - Basically, the IP address you set for Blocky would be the IP address you use in your router as your local DNS
+  
+-----
 
+## Part V: App Cluster Single Sign On and Authentication Set Up
 
-### Step Four: Installing other apps
+-----
+
+### Step Four: Installing o
+
+-----
