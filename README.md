@@ -754,11 +754,48 @@ See the original TrueCharts guide here: [TrueCharts - Blocky Setup Guide](https:
     - What's that? You have no idea what those acronyms mean? That's cool, here's an [article](https://www.cloudns.net/blog/understanding-dot-and-doh-dns-over-tls-vs-dns-over-https/) for ya.
     - DoT and DoH are secure, so we're going to configure those specifically
 
-3. On the Install Screen, under **App Configuration** add each of these under *Upstream Groups*:
-    - ```tcp-tls:1.1.1.1:853```
-    - ```tcp-tls:1.0.0.1:853```
-    - ```https://1.1.1.1/dns-query```
-    - ```https://1.0.0.1/dns-query```
+3. On the Install Screen, under **App Configuration** check *Override Default Upstreams* add each of these under *Upstream Groups*:
+```
+tcp-tls:1.1.1.1:853
+```
+```
+tcp-tls:1.0.0.1:853
+```
+```
+https://1.1.1.1/dns-query
+```
+```
+https://1.0.0.1/dns-query
+```
+
+5. Also on the Install Screen, under **App Configuration**, click add, and name the group whatever you want (I call it ```stevenblack-hagezi```), then add the follwing in that group:
+```
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+```
+```
+https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/pro.txt
+```
+  
+6. Also on the Install Screen, under **App Configuration**, add your domain name (eg ```your-cool-server.org```) under *k8s-Gateway Configuration*
+    - This allows us to enter our domain aliases on the local network (```neatapp.my-cool-server.xyz```), and Blocky will map those to local IP addresses for us
+    - This way, we're not making requests to remote DNS servers to access a PC we're sitting 30 feet from
+
+8. Also on the Install Screen, under **Networking and Services**, for *DNS TCP Service*, *DNS UDP Service*, and *DoT Service*:
+    - Set the *Service Type* to **Loadbalancer (Expose Ports)
+    - Set the *Loadbalancer IP* to an IP in the allowable range you set up in ```metallb```
+    - You can leave the main service set to Cluster IP. We don't need that port exposed, and we'll be able to access blocky later via your domain
+> Make sure you set all 3 of the Loadbalancer services to use the same IP address!
+
+7. Scroll down to the bottom an click *Install*
+
+8. Next, we'll want to forward some ports on our router:
+   - Forward port ```53``` for the Loadbalancer IP address you set above (Both TCP and UDP)
+   - Forward port ```853``` for the Loadbalancer IP address you set above (TCP only)
+  
+9. And that's it! You now have Blocky acting as your local DNS proxy AND ad blocker!
+    - You should be able to set Blocky as your local DNS server on your router if you wish
+    - Every router is differnt in this regard, feel free to do an internet search for instructions
+    - Basically, the IP address you set for Blocky would be the IP address you use in your router as your local DNS
 
 
 ### Step Four: Installing other apps
