@@ -686,9 +686,62 @@ k3s kubectl get svc -A
   
 -----
 
+### Step Four: Install Clusterissuer for automated Let's Encrypt certificates
+See [this guide] from TrueCharts for reference
 
+The purpose of this step is to set up ```clusterissuer```. What ```clusterissuer``` will do is request and renew certificates from Let's Encrypt for all of your apps that need them.
 
+For anyone that has had to set up certificates *and renew them* on their own, this makes life much easier. 
 
-### Step Three: Single Sign On
+Let's get to it!
+
+1. **Set Nameservers for TrueNAS Server**
+    - It is important to configure Scale with reliable nameserver to avoid issues handling DNS-01 challenges.
+    - Under *Network* -> *Global Configuration*-> *Nameservers*, TrueCharts recommends setting ```1.1.1.1/1.0.0.1``` (*Cloudfare*) or ```8.8.8.8/8.8.4.4``` (*Google*).
+  
+![scale-network-nameserver](https://truecharts.org/assets/images/scale-network-nameserver-1f209b68ab798f9d7ab5c970c03d7619.png)
+
+2. **Create a Cloudfare API Token for issuing Let's Encrypt certificates**
+    - Go to the [Cloudfare API Tokens](https://dash.cloudflare.com/profile/api-tokens) Dashboard
+    - Click *Create Token*
+    - Select *Edit Zone DNS template*.
+
+![cf-apitokens-template](https://truecharts.org/assets/images/cf-apitokens-template-d2dbad789d3620a820755b23d0ac3ceb.png)
+
+The recommended API Token permissions from TrueCharts are below:
+
+![cf-apitokens-perms](https://truecharts.org/assets/images/cf-apitokens-perms-cd6fbf348c5782343cc757a76c719ac8.png)
+
+- Save these settings, and Cloudfare will flash an API Token at you. Save this! We need it for the very next step.
+
+3. **Install** ```clusterissuer```
+    - Find ```clusterissuer``` in the TrueCharts enterprise train
+    - In settings, make the following updates:
+    - *Name*: Name this "cloudflareprod". This name will be used later in the app ingress configuration
+        - It's possible to set up multiple DNS providers per app, we're setting up one for Cloudfare
+        - Feel free to set up some of your own if you choose! 
+    - *Type of DNS Provider*: Cloudflare
+    - *Server*: Letsencrypt-Production
+    - *Email*: The email address you register with Let's Encrypt for renewal/expiration notices
+    - *Cloudflare API key*: Leave blank since API token will be used
+    - *Cloudflare API Token*: Populate with token created from above.
+
+![clusterissuer-appconfig](https://truecharts.org/assets/images/clusterissuer-appconfig-55e10076d3dec9b4f73f244a60a00e9a.png)
+
+4. That's it! You should now be able to add "cloudfareprod" to any app installation to get auto-generated Let's Encrypt certificates.
+    - See below for an example. You would replace ```cert``` with ```cloudfareprod``` if you've been following this guide
+  
+![clusterissuer-ingressconfig](https://truecharts.org/assets/images/clusterissuer-ingressconfig-cc09b0d1c68d0589d105f728f2521626.png) 
+
+> Note!
+> As part of the DNS verification process cert-manager will connect to authoritative nameservers to validate the DNS ACME entry. Any firewall or router rules blocking or modifying DNS traffic will cause this process to fail and prevent the issuance of certificates. Ensure no firewall or router rules are in place blocking or modifying DNS traffic to assigned authoritative nameservers. Below is an example of cloudflare assigned authoritative nameservers (these nameservers are unique to each user).
+
+![cloudflare-nameservers](https://truecharts.org/assets/images/cloudflare-nameservers-6ac9cbf04b84c2f1c14c0be4dcd56ff4.png)
+
+> Anoter Note!
+> It is by design that the app does not run, there are no events, no logs and no shell.
+
+![clusterissuer2](https://truecharts.org/assets/images/clusterissuer2-6bc697bc1e3fdd5a38a69dd0e665d9ec.png)
+
 
 ### Step Four: Installing other apps
