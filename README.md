@@ -1202,7 +1202,8 @@ Your.Protonmail-bridge.IP.Address
 - *Sender*: ```your@protonmail.address```
 - *Identifier*: ```127.0.0.1``` - this matches the host ID in ```protonmail-bridge```'s certificate
 - *Startup Check Address*: ```your@protonmail.address```
-
+- *Disable Require TLS*: checked
+- *Skip Certificate Verification*: checked
 
 5. On the Install screen, under ***Networking and Services**, set *Service Type* to *Cluster IP (Do Not Expose Ports)*
 
@@ -1211,3 +1212,80 @@ Your.Protonmail-bridge.IP.Address
     - Under *Hostname*, add ```auth.my-cool-server-domain.com```
     - Then click *Add* next to *Path*
     - For *Cert-Manager clusterIssuer*, enter ```cert```
+  
+7. Scroll to the bottom and click *Install*. ```authelia``` should be running after a couple of minutes!
+    - Don't worry, nothing really works yet.
+    - We are going to finish setting up ```authelia``` in the next section
+  
+-----
+
+### Step 3: ```authelia``` - Set up Access Control Restrictions
+Many of these rules are based on [this guide on Authelia Rules](https://truecharts.org/charts/enterprise/authelia/authelia-rules) from TrueCharts
+
+Access Control Restrictions?? What are thooooseee???
+
+This is where we'll set up access tiers for our users. 
+Say, for example, you have many apps, and you want to give ```alice``` and ```bob``` access to only a few of those. 
+We can use ```lldap``` groups and ```authelia``` access control restrictions to do that!
+
+Access control restrictions is a complex topic. See here for [Authelia's documentation on the many ways you can set this up](https://www.authelia.com/configuration/security/access-control/)
+
+Here, we're going to do two setups. The first one will be what I would call a 'simple' setup. Only one admin tier, which has access to all sites, and deny everything else:
+
+***The Simple Setup***
+
+![AutheliaAccessControl](https://truecharts.org/assets/images/AutheliaAccessControl-54b4a1b78f797c792cd493c8baedff08.png)
+
+- Let's break down what's going on here. Understanding this simple example will help you understand the more complex setup we'll introduce next.
+- *Default Policy*: This is what applies before any other rules we set up. ```one-factor``` means a password is required to proceed
+- *Networks*: You can define separate networks with ranges of IP addresses, for use in the Rules below
+- *Rules*: Rules are constructed in groups, each consisting of:
+    - Domain strings, which can take wildcards
+    - An authentication policy: ```deny```, ```bypass```, ```one-factor```, and ```two-factor```
+    - A Subject: these are the groups for which this authentication policy will apply for the domains listed (you can add as many as you like)
+    - Networks: the networks these rules should apply to, defined above (helpful for complex networks)
+    - Resources: regex strings which define strings *after the domain name* (helpful for allowing API calls)
+
+
+
+***The Advanced Setup***
+*First Rule*: Allow API Calls
+
+- *Domain*:
+```
+*.your-cool-server.com
+```
+- *Policy*: ```bypass```
+- *Subject*: Not Used (Do Not Add)
+- *Networks*: Not Used (Do Not Add)
+
+- *Resources*:
+```
+^/api([/?].*)?$
+```
+```
+ ^/identity.*$
+```
+```
+^/triggers.*$
+```
+```
+^/meshagents.*$
+```
+```
+^/meshsettings.*$
+```
+```
+^/agent.*$
+```
+```
+^/control.*$
+```
+```
+^/meshrelay.*$
+```
+```
+^/wl.*$
+```
+
+![authelia-api](https://truecharts.org/assets/images/authelia-api-b448c96f6496784e11be7bc288b53060.png
