@@ -743,5 +743,22 @@ The recommended API Token permissions from TrueCharts are below:
 
 ![clusterissuer2](https://truecharts.org/assets/images/clusterissuer2-6bc697bc1e3fdd5a38a69dd0e665d9ec.png)
 
+-----
+
+### Step 5: Install Blocky DNS Service
+See the original TrueCharts guide here: [TrueCharts - Blocky Setup Guide](https://truecharts.org/charts/enterprise/blocky/setup-guide/)
+
+1. First, let's install *Blocky* from the TrueCharts enterprise train
+
+2. For DNS, we're going to configure DoT and DoH.
+    - What's that? You have no idea what those acronyms mean? That's cool, here's an [article](https://www.cloudns.net/blog/understanding-dot-and-doh-dns-over-tls-vs-dns-over-https/) for ya.
+    - DoT and DoH are secure, so we're going to configure those specifically
+
+3. On the Install Screen, under **App Configuration** add each of these under *Upstream Groups*:
+    - ```tcp-tls:1.1.1.1:853```
+    - ```tcp-tls:1.0.0.1:853```
+    - ```https://1.1.1.1/dns-query```
+    - ```https://1.0.0.1/dns-query```
+
 
 ### Step Four: Installing other apps
