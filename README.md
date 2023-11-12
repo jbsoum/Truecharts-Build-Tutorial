@@ -838,7 +838,8 @@ https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/pro.txt
   
 -----
 
-### Step 7: Install Proton Mail Bridge (Optional)
+### Step 7: Install ```protonmail-bridge``` (Optional)
+Based on these [installation notes for ```protonmail-bridge``` from TrueCharts](https://truecharts.org/charts/stable/protonmail-bridge/installation_notes)
 
 Finally in this section, we're going to set up an email service to allow our server to communicate with us when something happens.
 
@@ -862,12 +863,157 @@ Gmail only shows you this once, so they kind of function like the API tokens we 
 
 We'll try and provide instructions for both methodologies. By the end of this section, you should be able to receive emails from your apps and servers, either using Proton or Gmail. 
 
-1. **Install** ```protonmail-bridge```
-    -  
+1. **Install ```protonmail-bridge```**
+
+- In the Install Screen, under **Networking and Services**:
+    - change the *Loadbalancer IP* for both *IMAP* and *SMTP* to be an allowable and available IP address in the range you defined for ```metallb```.
+    - change the *SMTP Port* to be ```1025```
+    - change the *IMAP Port* to be ```1143```
+- Scroll to the bottom of the Install screen and click *Install*
+
+2. **Shell into the ```protonmail-bridge``` container using ```heavyscript```**
+- First, you want to open you SSH terminal into your TrueNAS server as your admin account, then run this command:
+```
+heavyscript pod --shell protonmail-bridge
+```
+
+- You should see a prompt asking:
+> App Name:  protonmail-bridge
+> Pod:       protonmail-bridge-5b64468bc5-f6nsq
+> Container: protonmail-bridge
+>
+> If everything looks correct press enter/spacebar, or press ctrl+c to exit
+
+- Go ahead and press ```Enter``` or ```Spacebar```!
+- We are now running a terminal *inside of the ```protonmail-bridge``` pod*
+
+3. **Per the installation notes, once shelled into ```protonmail-bridge```, run the following commands in order:
+```
+chmod +x entrypoint.sh && ps aux | grep [b]ridge | awk '{print $2}' | xargs -I {} kill -9 {} && ./entrypoint.sh init
+```
+- At this point, you should see some cool ASCII art of a bridge pop up in the terminal, followed by a prompt. Go ahead and enter the following command:
+```
+login
+```
+
+4. **Enter your _Proton Mail_ username and password when asked**
+- If you set up a *Mailbox Password* or *2FA*, you'll be asked for those as well.
+- If you logged in correctly you should see that:
+> A sync has begun for \<your-proton-username\>
+- This sync might take a few minutes
+
+5. **Once the sync is complete, let's change some settings:**
+
+
+- First, enter the following command to allow bridge to securely connect to Proton via 3rd parties:
+```
+proxy allow
+```
+-You should see something like this:
+> Bridge is currently set to NOT use alternative routing to connect to Proton if it is being blocked.
+> Are you sure you want to allow bridge to do this?
+- Type ```yes``` and press ```Enter```
+
+- If you use multiple email aliases with Proton (I recommend this), you want to turn on *Split Address Mode*
+- Split Address Mode will treat each of your email addresses like a separate SMTP account
+- IF that sounds cool, enter the following command into the ```protonmail-bridge``` shell:
+```
+change mode
+```
+```protonmail-bridge``` will ask you the following:
+> Are you sure you want to change the mode for account \<username\> to split? yes/no:
+
+- Type ```yes``` and press ```Enter```, and ```protonmail-bridge``` will start syncing ***again*** (lol yeah, I know)
+
+6. Let's take a 10 minute break and think about all of those server emails we'll receive in the future 💭📨
+
+7. **When that's done syncing, let's grab our credentials**
+- Type the following command into the ```protonmail-bridge``` shell:
+```
+list
+```
+
+- You should see an output like this:
+> # : account                     (status         , address mode   )
+> 0 : \<your-proton-username\>    (connected      , combined       )
+
+- Take note of the number next to the account we want credentials for, (```0``` in the example above)
+- We'll use that number to run the ```info``` command:
+```
+info 0
+```
+- grab the password for the username / email alias you want to use for TrueNAS system emails
+
+
+9. **Set up some system emails for TrueNAS**
+- In the top toolbar of the TrueNAS GUI, all the way in the top right:
+- click the alert 🔔 icon,
+- then click the ⚙️ icon,
+- then click *Email*
+> You can also get here by going to the *System* tab -> *General* -> Locate the Email Widget
+
+![EmailWidget](https://www.truenas.com/docs/images/SCALE/Dashboard/EmailWidget.png)
+
+- Click *Settings* in the email widget
+
+- In the screen below, make sure to update the following:
+    - *From Email*: Your Proton email address
+    - *From Name*: Whatever you want
+    - *Outgoing Mail Server*: The Loadbalancer IP address you set for ```protonmail-bridge``` above
+    - *Mail Server Port*: ```1025```, as we set in the ```protonmail-bridge``` settings
+    - *Security*: *TLS (STARTTLS)*
+    - *SMTP Authentication*: Checked (enabled)
+    - *Username*: Your Proton email address
+    - *Password*: The password you copied running the ```info 0``` command  
+
+- Click *Send Test Email* below to test your settings.
+- If they worked, you should see that the email was sent successfully, and shortly after, you should receive an email to your Proton account!
+- Go ahead and save these settings, and pat yourself on the back for setting up secure email alerts and supporting services that respect user privacy!
+  
+![EmailOptionsSMTP](https://www.truenas.com/docs/images/SCALE/SystemSettings/EmailOptionsSMTP.png)
+
+
+7. **Use ```protonmail-bridge```!
+- See below for some useful commands
+- Here's [a full list of commands from *Proton*](https://proton.me/support/bridge-cli-guide)
+
+To terminal into ```protonmail-bridge```, run this ***from TrueNAS shell or SSH terminal***:
+```
+heavyscript pod --shell protonmail-bridge
+```
+
+In ```protonmail-bridge``` shell, run this to launch the ```protonmail-bridge``` terminal:
+```
+chmod +x entrypoint.sh && ps aux | grep [b]ridge | awk '{print $2}' | xargs -I {} kill -9 {} && ./entrypoint.sh init
+```
+- If you do this a lot, you can press ```Arrow Up``` in the ```protonmail-bridge``` shell and see the command pop up
+
+If you were logged out for whatever reason, run this after the command above:
+```
+login
+```
+
+Run this to get the list and index numbers for each of your Proton accounts:
+```
+list
+```
+
+Run this to get the credentials for all of your email aliases, where ```n``` is the index number for your account from the command above:
+```
+info n
+```
+
+-----
+
+### Step 8: Use Google for System Emails Instead (Discouraged)
+
 
 -----
 
 ## Part V: App Cluster Single Sign On and Authentication Set Up
+
+-----
+
 See these guides from [TrueCharts]() for the details behind this tutorial:
 - [Authelia + Lldap + Traefik Forwardauth Setup Guide](https://truecharts.org/charts/enterprise/authelia/Setup-Guide/)
 - [Lldap Installation Notes](https://truecharts.org/charts/stable/lldap/installation-notes/)
