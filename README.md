@@ -578,16 +578,21 @@ Okay! Break time over! Let's get back to it!
 
 Now that our apps cluster is up and running, and we have a shiny new domain name with a DNS service ready to resove our domain, let's set up our network access.
 
-We'll want to set up a reverse proxy (```traefik```) that handles forwarding domain aliases (eg coolapp.shinyserver.com) to the apps in our cluster.
+First, we want to change the default ports of the TrueNAS Web GUI (80 for http, 443 for https).
 
-We'll also set up Single Sign On using an LDAP server (```lldap```) and authentication middleware (```authelia```). 
-    - An LDAP server is essentially a single source of truth for usernames, passwords, and access groups for all of your apps and services which support LDAP. 
-    - Users will be able to log into the LDAP server and update their passwords directly
-    - The authentication middleware will look at the LDAP server to check usernames and passwords for access
-    - Apss which support LDAP will also check the server for access, so users won't need a different set of credentials for each app in your cluster they want to access
-    - Some apps will auto-create accounts for users with a valid LDAP entry if one doesn't exist already. 
+Then, we'll set up a reverse proxy (```traefik```) to use those ports instead to handle forwarding domain aliases (eg coolapp.shinyserver.com) to the apps in our cluster.
 
-By the time we make it to the end of this section, we should have a framework for assigning different levels of access to apps based on group membership, and a single source of truth for usernames and passwords for most or possibly all of your apps!
+We'll also want to replace TrueNAS's default Loadbalancer, and replace it with ```metallb```. ```metallb``` will allow us to specify IP addresses for each of our apps. 
+With TrueNAS's default Loadbalancer, our only choice for IP address when we want to expose ports is to use the static IP you set for the server. 
+
+Next, we'll set up ```clusterissuer```, which will get verified Let's Encrypt certificates for each of our apps, on the fly! 
+We'll need an access token from [Cloudflare](https://cloudflare.com/) to give ```clusterissuer``` access to pass the security challenges. 
+
+We'll also want to set up ```cloudflareddns``` to keep Cloudflare up to date with our latest IP address, if our ISP is always changing it. 
+We'll need another access token from [Cloudflare](https://cloudflare.com/) to complete the request.
+
+Finally in this sections, we'll set up ```blocky``` as custom local DNS service and ad blocker. 
+
 
 -----
 
@@ -833,10 +838,90 @@ https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/pro.txt
   
 -----
 
-## Part V: App Cluster Single Sign On and Authentication Set Up
+### Step 7: Install Proton Mail Bridge (Optional)
+
+Finally in this section, we're going to set up an email service to allow our server to communicate with us when something happens.
+
+TrueNAS itself will want to send you email notifications whenever something happens, like a cron job completes or if theres a HDD error of some sort. 
+
+You CAN use Google, but they are creepy and mine all of our email for data. 
+
+Proton Mail is super encrypted and secure, Proton couldn't mine our emails for data even if they wanted to, which is great.
+
+If you have a **paid Proton account**, (which I highly recommend, if for nothing else than to support services that provide data privacy to users),
+you can use a CLI app called **Proton Mail Bridge**, which allows you to access Proton emails via SMTP. 
+
+This bridge is, well it can be a bit finicky. For example, every now and then, if you stop receiving emails or if your apps throw SMTP errors, it
+probably means you need to log into the ```protonmailbridge``` app via shell and login to your proton account again. 
+
+But, once you get it set up, you can have all server mail forwarded to your Proton account, AND you can create different email aliases for different apps, functions, or services!
+- Careful with the email aliases! I think you only get ten, and you can't delete them once they are created!
+
+If this all seems too intimidating, you can always use a Gmail account. Gmail has a feature which allows you to generate a unique *app password* for each app that wants access to your Gmail. 
+Gmail only shows you this once, so they kind of function like the API tokens we were generating with Cloudflare. 
+
+We'll try and provide instructions for both methodologies. By the end of this section, you should be able to receive emails from your apps and servers, either using Proton or Gmail. 
+
+1. **Install** ```protonmail-bridge```
+    -  
 
 -----
 
-### Step Four: Installing o
+## Part V: App Cluster Single Sign On and Authentication Set Up
+See these guides from [TrueCharts]() for the details behind this tutorial:
+- [Authelia + Lldap + Traefik Forwardauth Setup Guide](https://truecharts.org/charts/enterprise/authelia/Setup-Guide/)
+- [Lldap Installation Notes](https://truecharts.org/charts/stable/lldap/installation-notes/)
+
+Okay, by now, we should have a shiny domain for our server that's remotely accessible from anywhere. 
+Welllll, that's really cool, but what about all of the shadowy figures in hoods and masks with curly mustaches that want to steal all of your electronic valuables??
+
+You know the type...
+
+![Tenor - Hacks Hacker GIF](https://tenor.com/bBR6R.gif)
+
+That's why we're going to set up ***Single Sign On***.
+
+Wuzzat even??
+
+The idea here is that, let's say we have a bunch of apps. Like ```gitea``` (open source alternative to sites like *github.com*)  and ```guacamole``` (web-based remote desktop service)
+
+Neat! Now let's say you have two friends, ```alice``` and ```bob```, who both need access to both ```gitea``` and ```guacamole```. 
+
+Wellll, each app has their own internal username and password system, so we would need to set up an account for ```alice``` and ```bob``` ***in each app***.
+
+We also need to set up a default password for them ***in each app***.
+
+It would be up to your users to keep track of which password is being used for which account.
+
+And, well, people are busy, and they have a lot of darn passwords to remember.
+
+So what happens? **They will pick a super insecure password that's easy for them to remember, _and also easy for hackers to guess and gain access into your server_**.
+
+And now you have a security risk.
+
+With ***Single Sign On***, your users will only need to remember (mostly) one set of usernames and passwords. 
+We will use an **LDAP Server** (```lldap```), to be our single source of truth for usernames and passwords.
+When users want to update their password, they will go to one place, let's say ```lldap.your-cool-server.xyz```. 
+```gitea``` and ```guacamole```, once set up to do so, will look to ```lldap``` for the correct usernames and passwords instead of their own internal user databases. 
+Now that gaining access to your system and changing passwords is easier for your users, you can count on them to create and remember strong passwords to enter your server.
+
+For authentication, we're going to use ```authelia``` which is an authentication middleware. The idea is that, whenever anyone wants to access anything at our domain,
+```authelia``` will chime in to ask for a username and password if it hasn't received one from that client node. ```authelia``` will check for the correct
+usernames and passwords in ```lldap```, the same place your other apps are checking. 
+
+If ```authelia``` finds a valid account in ```lldap```, AND that account is part of an ldap group that has permission to access the site the user is trying to go to,
+**only then will** ```authelia``` **grant access to the app requested**.
+
+
+By the time we make it to the end of this section, we should have a framework for assigning different levels of access to apps based on group membership, 
+and a single source of truth for usernames and passwords for most or possibly all of your apps!
+
+
+-----
+
+### Step One: Install and Configure Lldap
+See here for the [relevant guide from TrueCharts](https://truecharts.org/charts/stable/lldap/installation-notes/).
+
+
 
 -----
