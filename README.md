@@ -1117,3 +1117,97 @@ That's it! Lldap is all set up! We'll come back to update the config in a bit on
 -----
 
 ### Step 2: Install and Configure ```authelia```
+Based on [this guide](https://truecharts.org/charts/enterprise/authelia/Setup-Guide#setup-authelia) from TrueCharts
+
+> The setup for Authelia is very specific, and the logs won't tell you where you've messed up,
+> but there's precise steps used to integrate LLDAP into Authelia.
+> The info comes from the LLDAP Authelia Docs and the upstream repo.
+
+1. Install ```authelia``` from the TrueCharts enterprise train to bring up the Install screen
+
+2. On the Install screen, under **App Configuration**, update the following settings:
+    
+    - *Domain*: ```mydomain.com``` - Your domain without https://
+    - *Default Redirection URL*: ```https://auth.mydomain.com``` - Can be anything, but we'll stick to auth.mydomain.com. As well, this will be the ingress URL for Authelia
+  
+3. On the Install screen, also under **App Configuration**, make sure **LDAP backend configuration** is checked, then updated the following settings:
+
+- *Implementation*: Custom (that's the default)
+- *URL*:
+```
+ldap://lldap-ldap.ix-lldap.svc.cluster.local:3890
+```
+- *Connection Timeout*: ```5s```
+- *Start TLS*: (Not necessary)
+- *TLS Settings*: (Not necessary)
+- *Server Name*: Leave blank
+- *Skip Certificate Verification*: Leave unchecked
+- *Minimum TLS version*: TLS1.2
+- *Base DN*:
+```
+dc=mydomain,dc=com
+```
+- *Username Attribute*:
+```
+uid
+```
+- *Additional Users DN*:
+```
+ou=people
+```
+- *Users Filter*:
+```
+(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person))
+```
+- *Additional Groups DN*:
+```
+ou=groups
+```
+- *Groups Filter*:
+```
+(member={dn})
+```
+- *Group name Attribute*:
+```
+cn
+```
+- *Mail Attribute*:
+```
+mail
+```
+- *Display Name Attribute*:
+```
+displayName
+```
+- *Admin User*:
+```
+uid=authelia,ou=people,dc=mydomain,dc=com
+```
+- Notice the ```uid=authelia```, this is the admin user we created in ```lldap``` to manage LDAP authentications for us
+- *Password*: ```RANDOMPASSWORD```
+    - This is the strong password you created for the *authelia* user 
+
+4. On the Install screen, also under **App Configuration**, make sure **SMTP provider** is checked, then updated the following settings:
+> If you opted for gmail instead of protonmail, ignore the below and use the Google instructions to generate an app password
+- *Host*:
+```
+Your.Protonmail-bridge.IP.Address
+```
+- *Port*:
+```
+1025
+```
+- *Username*: ```your@protonmail.address```
+- *Password*: ```YoUr-RanD0M-PaSsWoRD``` from ```protonmail-bridge``` credentials, acquired running ```info 0``` in the bridge shell
+- *Sender*: ```your@protonmail.address```
+- *Identifier*: ```127.0.0.1``` - this matches the host ID in ```protonmail-bridge```'s certificate
+- *Startup Check Address*: ```your@protonmail.address```
+
+
+5. On the Install screen, under ***Networking and Services**, set *Service Type* to *Cluster IP (Do Not Expose Ports)*
+
+6. On the Install screen, under **Ingress*, click * Enable Ingress*,
+    - Then click *Add* next to *Host*,
+    - Under *Hostname*, add ```auth.my-cool-server-domain.com```
+    - Then click *Add* next to *Path*
+    - For *Cert-Manager clusterIssuer*, enter ```cert```
