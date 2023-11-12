@@ -1065,9 +1065,55 @@ and a single source of truth for usernames and passwords for most or possibly al
 
 -----
 
-### Step One: Install and Configure Lldap
+### Step One: Install and Configure ```lldap```
 See here for the [relevant guide from TrueCharts](https://truecharts.org/charts/stable/lldap/installation-notes/).
 
+1. Install ```lldap``` from the TrueCharts stable train
 
+2. In the Install screen under **Workload Settings**, change the following:
+    - *LDAP Base DN*: if your server's domain name is ```my-cool-server.org```, you would enter ```dc=my-cool-server,dc=com``` here
+    - *Ldap User DN*: create an admin username to log into lldap with
+    - *Ldap User Email*: associate an email address with this admin account
+    - *Ldap User Password*: set a password for this admin account
+    - *Public URL*: we're going to give this app an alias to access it with soon, for now, choose something like ```https://lldap.<your-shiny-server>.<com>```
+        - Replace ```<your-shiny-server>``` with your domain, and ```<com>``` with your top-level domain
+    
+3. In the Install screen under **Workload Settings**, check *Show SMTP Settings* and a bunch of options should pop up
+    - If you did NOT set up ```protonmail-bridge```, use the Google SMTP instructions to fill the below out. Otherwise:
+   -*SMTP Server Url*: ```http://<Your.Protonmail-bridge.IP.Address>```, as we set in ```protonmail-bridge```
+   -*SMTP Port*: ```1025```, as we set in ```protonmail-bridge```
+    - *SMTP Encryption*: ```STARTTLS```
+    - *SMTP User*: Your Proton email address
+    - *SMTP Password*: Your Proton email password, the ones you get from shelling into ```protonmail-bridge```, logging in using the instructions in this guide, and copying the password for your email address
+    - *SMTP From*: ```LLDAP Admin <sender@protonmail.com>```
+
+3. In the Install screen under **Network and Services**, for the **Main Service** only, change the following settings:
+    -  *Service Type*: ```Loadbalancer (Expose Ports)```
+    -  *LoadBalancer IP*: An available IP address from your allowed range in ```metallb```
+
+4. In the Install screen under **Network and Services**, for the **Additional service to accept LDAP connections** only, change the following settings:
+    -  *Service Type*: ```ClusterIP (Do Not Expose Ports)```
+    -  **Why are we doing this??**
+    -  Welll, we want a defined IP address and available port for the main service, which is the ```lldap``` web GUI
+    -  We don't need that for the LDAP connection service, so we leave those ports unexposed, and the IP address undefined
+    -  I think it's better to expose as few ports as possible, generally speaking.
+
+5. Go ahead and click Install at the bottom of the Install screen.
+    - Well come back here later to set up Ingress after ```authelia``` is all set up
+
+6. In your web browser, enter ```http://<Loadbalancer.IP.For.Lldap:17170```
+    - Log in using the Lldap username and password you set above
+
+7. Once logged into ```lldap```, let's create another user that our apps will use to bind credentials to the LDAP server
+    - In the *User* screen, click *Create a User*
+    - In this example, we'll call them ```authelia```
+    - You need to fill out an email for the user (let's use the same email you use for TrueNAS alerts)
+    - Use a strong password (consider a password generator) and save it in a password manager
+    - Once the user is created, you'll be returned to the *User* screen
+    - Scroll to the bottom, and add this user to the ```lldap_password_manager``` group
+  
+That's it! Lldap is all set up! We'll come back to update the config in a bit once we've finished setting up ```authelia```
 
 -----
+
+### Step 2: Install and Configure ```authelia```
