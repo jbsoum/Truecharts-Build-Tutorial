@@ -1469,10 +1469,11 @@ The process looks something like this:
 > You'll also likely want one for ```lldap.your-cool-server.com``` so that users can remotely change their passwords
  
 At this point, you could go back to edit the configs of the following apps we've installed, and add Ingress to them if you want:
-    - ```traefik```
-    - ```blocky```
-    - ```lldap```
-    - ```traefik```
+
+- ```traefik```
+- ```blocky```
+- ```lldap```
+- ```traefik```
 
 ![TraefikForwardAuthMiddleware](https://truecharts.org/assets/images/TraefikForwardAuthMiddleware-77182ca6fc6e619540467b0aef732ad2.png)
 
