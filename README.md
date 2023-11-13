@@ -1408,3 +1408,76 @@ group:lldap_admin
 -----
 
 ### Step 4: ```traefik``` - Set up Forward Auth
+
+Okay! Almost there! Now, we're going to set up ```authelia``` as an authentication middleware in ```traefik```.
+
+1. Go to the *Apps* tab in the TrueNAS Web GUI, click on the ```traefik``` app, and click *Edit* in the *Application Info* widget.
+
+2. Scroll down to *forwardAuth* and click *Add*
+
+- Name your forwardauth something you'll remember, since that's the middleware you'll add to your ingress going forward. Most people use ```auth```
+- *Address*:
+```
+http://authelia.ix-authelia.svc.cluster.local:9091/api/verify?rd=https://auth.your-cool-server.com/
+```
+- and replace the last part based on ```your-cool-server.com```, and if you've changed ports/names you can get that from Heavyscript
+- Check trustForwardHeader
+- Add the following authResponseHeaders (press Add 4 times)
+```
+Remote-User
+```
+```
+Remote-Group
+```
+```
+Remote-Name
+```
+```
+Remote-Email
+```
+
+![TraefikForwardAuth](https://truecharts.org/assets/images/TraefikForwardAuth-ac2d65daffb74fdd68b384c939110749.png)
+
+-----
+
+### Step 5: Using ```authelia``` and ```clusterissuer``` to add security to your new apps
+
+Okay! Now that we did all of this setup work, let's watch it pay off! 
+
+Now, whenever we install a new app, we can easily and automatically add a reverse proxy, authentication, and a Let's Encrypt certificate!
+
+The process looks something like this:
+- Click on the app in the *Apps* tab of the TrueNAS Web GUI, then click on *Edit* in the *Application Info* widget
+- Scroll down to the **Ingress** section, and check *Enable Ingress*
+- Under *Hosts*, add the alias for your app (eg: ```sonarr.your-cool-server.com```)
+- Click *Add* next to *Paths*
+    - *Path*: ```/```
+    - *Path Type*: ```Prefix```
+- *Cert-Manager clusterIssuer*: ```cloudfareprod```, or whatever you defined for ```certissuer```
+- *Traefik Middlewares*: click *Add*, then type ```auth```, or however you defined the *forwardAuth* in ```traefik```
+- **Finally, log into [Cloudfare](https://dash.cloudflare.com/), click on your domain in your dashboard, then click on *DNS* -> *Records* on the right menu bar
+    - Click *Add Record*
+    - *Type*: ```CNAME```
+    - *Name*: some alias, eg if your alias is ```sonarr.your-cool-server.com```, then enter ```sonarr``` here
+    - *Target*: ```your-cool-server.com```
+    - *Proxy status*: ```DNS Only``` (unchecked)
+    - *TTL*: ```Auto```
+    - Click *Save*
+ 
+> Make sure you create a CNAME record for every alias you use!
+> For example, we'll need one for ```auth.your-cool-server.com``` at least
+> You'll also likely want one for ```lldap.your-cool-server.com``` so that users can remotely change their passwords
+ 
+At this point, you could go back to edit the configs of the following apps we've installed, and add Ingress to them if you want:
+    - ```traefik```
+    - ```blocky```
+    - ```lldap```
+    - ```traefik```
+
+![TraefikForwardAuthMiddleware](https://truecharts.org/assets/images/TraefikForwardAuthMiddleware-77182ca6fc6e619540467b0aef732ad2.png)
+
+Great job! You really have accomplished a lot if you made it this far!
+
+Take a break, and enjoy logging into, well, not much yet, but we can change that soon! Great job!
+
+-----
