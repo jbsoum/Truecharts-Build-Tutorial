@@ -1230,6 +1230,16 @@ We can use ```lldap``` groups and ```authelia``` access control restrictions to 
 
 Access control restrictions is a complex topic. See here for [Authelia's documentation on the many ways you can set this up](https://www.authelia.com/configuration/security/access-control/)
 
+> **The order of the rules is significant!!**
+> The rules are each evaluated by ```authelia``` **in order**, so it stops evaluating rules after the first match.
+> **It's important to define these rules in order!**
+> 
+> IF there's a rule you think you might want to use later, it might be best to add it now.
+> If you don't have the domain set up, that' okay. The rule won't do anything until you do,
+> and you can easily update the config later if you want to change the domain list
+>
+> If you don't add a rule now but want it later, **you'll likely have to delete all of your rules and start fresh**
+
 Here, we're going to do two setups. The first one will be what I would call a 'simple' setup. Only one admin tier, which has access to all sites, and deny everything else:
 
 ***The Simple Setup***
@@ -1250,6 +1260,8 @@ Here, we're going to do two setups. The first one will be what I would call a 's
 
 ***The Advanced Setup***
 *First Rule*: Allow API Calls
+This rule should allow any call to a domain with api tags to bypass authentication. That way, you don't have to log into ```authelia``` when 
+accessing a server app from something like a phone app. 
 
 - *Domain*:
 ```
@@ -1288,4 +1300,111 @@ Here, we're going to do two setups. The first one will be what I would call a 's
 ^/wl.*$
 ```
 
-![authelia-api](https://truecharts.org/assets/images/authelia-api-b448c96f6496784e11be7bc288b53060.png
+![authelia-api](https://truecharts.org/assets/images/authelia-api-b448c96f6496784e11be7bc288b53060.png)
+
+*Second Rule*: Valutwarden - Protect Admin Page
+What is [Vaultwarden](https://github.com/dani-garcia/vaultwarden)? It's essentially a lightweight, open source, self-hosted [Bitwarden](https://bitwarden.com/) server.
+It's one of the many apps available in the [TrueCharts](https://truecharts.org/) ecosystem.
+
+These rules will protect the Vaultwarden admin page with Authelia but bypass when accessing the web vault. 
+> The order of these rules is critical or the admin page will not be protected.
+
+- *Domain*: 
+```
+vaultwarden.your-cool-server.com
+```
+- *Policy*: ```one_factor```
+- *Subject*: Not Used (Do Not Add)
+- *Networks*: Not Used (Do Not Add)
+- *Resources*:
+```
+^*/admin.*$
+```
+
+![authelia-vw1](https://truecharts.org/assets/images/authelia-vw1-704ba631444d8bded6b5994917d78bc6.png)
+
+*Third Rule*: Valutwarden - bypass for web vault access
+
+- *Domain*: 
+```
+vaultwarden.your-cool-server.com
+```
+- *Policy*: ```bypass```
+- *Subject*: Not Used (Do Not Add)
+- *Networks*: Not Used (Do Not Add)
+- *Resources*: Not Used (Do Not Add)
+
+*Fourth Rule*: Domains to bypass
+
+This section will be for domains that are public, aka anyone can access them without a password.
+Some potential example of apps you might want to do this with are apps like:
+- ```whoogle``` - self-hosted meta search engine
+- ```libreddit``` - self-hosted reddit gui
+
+- *Domain*: add any domains with aliases that you want to bypass auth for here, eg:
+```
+whoogle.your-cool-server.com
+```
+```
+libreddit.your-cool-server.com
+```
+- *Policy*: ```bypass```
+- *Subject*: Not Used (Do Not Add)
+- *Networks*: Not Used (Do Not Add)
+- *Resources*: Not Used (Do Not Add)
+
+*Fifth Rule*: Access for users to specific services
+
+This rule is for ```lldap``` groups of users that you want to grant access to certain services.
+Simply create a group in ```lldap``` and add users to it.
+You would add that group in the *Subject*, and any *Domains* they need access to. 
+
+> For multiple tiers of users, you would add rules addtional groups after this rule
+> The final rule in this guide should always be the last rule
+
+- *Domain*: add any domains with aliases that you want to require auth for here, eg:
+```
+sonarr.your-cool-server.com
+```
+```
+radarr.your-cool-server.com
+```
+- *Policy*: ```one_factor```
+- *Subject*:
+```
+group:your_new_lldap_group
+```
+- *Networks*: Not Used (Do Not Add)
+- *Resources*: Not Used (Do Not Add)
+
+![authelia-user](https://truecharts.org/assets/images/authelia-user-5a9eca70e0884b1fe1bb3d23d7f01ed9.png)
+
+*Final Rule* - Catch-all for the admin users
+
+This rule will catch any access requests not covered by other rules.
+
+All domains not otherwised specified will require admin access.
+
+> However many rules you end up with, **make sure this is the final rule!**
+
+
+- *Domain*: these two strings together will cover all calls to your domain
+```
+your-cool-server.com
+```
+```
+*.your-cool-server.com
+```
+- *Policy*: ```one_factor```
+- *Subject*: - only admin accounts should have this level of access
+```
+group:lldap_admin
+```
+- *Networks*: Not Used (Do Not Add)
+- *Resources*: Not Used (Do Not Add)
+
+![authelia-catch](https://truecharts.org/assets/images/authelia-catch-5bbeea760aebbf3a76547ebd99dc2fe0.png)
+
+-----
+
+### Step 4: ```traefik``` - Set up Forward Auth
