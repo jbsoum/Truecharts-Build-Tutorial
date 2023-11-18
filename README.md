@@ -1482,3 +1482,71 @@ Great job! You really have accomplished a lot if you made it this far!
 Take a break, and enjoy logging into, well, not much yet, but we can change that soon! Great job!
 
 -----
+
+-----
+
+## Appendix - Troubleshooting
+
+-----
+
+### Upgrade from Blufin to Cobia - Issues with SMB permissions
+
+I'm documenting this bug because it's a weird one, and as far as I can tell, I was the only one experiencing it.
+
+SO, I don't know what could be prodcing this except that I upgraded from Bluefin to Cobia, *after* having followed [this guide from TrueCharts](https://truecharts.org/manual/SCALE/guides/dataset/#smb-access)
+
+The problem is, in Cobia, there is no **Auxilliary Parameters** setting for SMB shares, so you can't `force user = apps` or `force group = apps`. 
+
+As far as setting this for your shares so you can follow the recommended TrueCharts setup (yes, this is still recommended as of Cobia, I checked with the TrueCharts developers on Discord),
+you can use [this script](https://github.com/xstar97/scale-scripts#smb-auxillary-param) from [Xstar97TheNoob](https://github.com/xstar97) to force user and group for the SMB shares you are also sharing with apps.
+
+The script allows you to choose per share, which is great if you have some shares you **_don't want to share with apps, but want more granular permissions for_**.
+
+The script above **does not** fix the issue we're talking about. 
+
+**If you upgraded from Bluefin to Cobia, and are all of a sudden having read / write / mount permission issues with your smb shares:**
+- Run this from an SSH terminal to your server:
+```
+testparm -s
+```
+and check if you see `force user = apps` or `force group = apps` anywhere in the options under `[global]`. 
+
+**If you do:**
+- First, in the Web GUI, go to the little profile icon in the top right of the screen, click on it, and click **API Keys**. Generate one, and don't lose it! We're going to use it for this specific purpose, then delete it.
+- Now, run:
+```
+curl -X 'GET' \
+  'http://localhost:81/api/v2.0/smb' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <API_KEY>'
+```
+- Replcae `<API_KEY>` with the API Key you generated above
+- If you did **NOT** set up a reverse proxy with `traefik` according to the guide, change the port from `81` to `80`.
+
+**Do you see something like this in the output?**
+```
+ "smb_options": "force user=apps\nforce group=apps",
+```
+
+**If you do:**
+- Run this from an SSH terminal to your server (*yeah, the whole thing, just paste it all in there and press `Enter`*):
+```
+curl -X 'PUT' \
+  'http://localhost:81/api/v2.0/smb' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer <API_KEY>' \
+  -H 'Content-Type: application/json' \
+  -d '{"smb_options":""}'
+```
+- Replcae `<API_KEY>` with the API Key you generated above
+- If you did **NOT** set up a reverse proxy with `traefik` according to the guide, change the port from `81` to `80`.
+
+**That's it!**
+- Running `testparm -s` again should not show anything about the apps user or group in your global SMB settings
+- You can use [Xstar97TheNoob's script](https://github.com/xstar97) to force user and group to be `apps` per SMB share
+    - you would do this for data that you want to share with apps via NFS, but **also want to access via SMB with other users**
+ 
+-----
+
+
+
