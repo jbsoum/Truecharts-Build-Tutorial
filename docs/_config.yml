@@ -35,6 +35,60 @@ theme: just-the-docs
 # plugins:
 #  - jekyll-feed
 
+# Aux links for the upper right navigation
+aux_links:
+  "Storage Software TrueNAS, by ixSystems":
+    - "https://www.truenas.com/"
+  "Apps Ecosystem By TrueCharts":
+    - "https://truecharts.org/"
+
+# Makes Aux links open in a new tab. Default is false
+aux_links_new_tab: true
+
+# Color scheme supports "light" (default) and "dark"
+color_scheme: dark
+
+# Callouts
+callouts:
+  # With default titles
+  note:
+    title: Note
+    color: grey-lt
+  why:
+    title: Why Did We Do This?
+    color: grey-dk
+  walkthrough:
+    title: Follow these steps...
+    color: purple
+  sources:
+    title: Sources
+    color: blue
+  info:
+    title: Additional Information
+    color: green
+  alert:
+    title: Alert! 🚨
+    color: yellow
+  warning:
+    title: Warning! ⚠️
+    color: red
+  # Without default titles
+  note-title:
+    color: grey-lt
+  why-title:
+    color: grey-dk
+  walkthrough-title:
+    color: purple
+  sources-title:
+    color: blue
+  info-title:
+    color: green
+  alert-title:
+    color: yellow
+  warning-title:
+    color: red
+
+
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to
