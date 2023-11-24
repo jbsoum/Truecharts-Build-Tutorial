@@ -1,6 +1,6 @@
 ---
 layout: default
-title: 2. Install TrueNAS from USB and Set up the Administrator Account
+title: 2. Install from USB & Set up Admin Account
 parent: I. Setting up the TrueNAS System
 grand_parent: TrueCharts Build Tutorial
 nav_order: 2
@@ -22,7 +22,7 @@ See here for the guide on first time setup of TrueNAS: [TrueNAS Installer Consol
     
 - You want to make sure you select the SSD drive you want to use as your boot drive
 
-Select **Yes**.
+1. Select **Yes**.
 
 ![SCALEInstallWarningScreen][imgWarningScreen]
 
