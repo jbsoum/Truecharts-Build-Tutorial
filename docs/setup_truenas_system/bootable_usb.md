@@ -1,8 +1,9 @@
 ---
-title: 1. Set up TrueNAS SCALE Bootable USB
 layout: default
-nav_order: 1
+title: 1. Set up TrueNAS SCALE Bootable USB
 parent: I. Setting up the TrueNAS System
+grand_parent: TrueCharts Build Tutorial
+nav_order: 1
 ---
 
 # Set up TrueNAS SCALE Bootable USB
