@@ -1,7 +1,7 @@
 ---
-title: I. Setting up the TrueNAS System
+title: I. TrueNAS System Setup
 has_children: true
-layout: minimal
+layout: default
 parent: TrueCharts Build Tutorial
 nav_order: 2
 ---

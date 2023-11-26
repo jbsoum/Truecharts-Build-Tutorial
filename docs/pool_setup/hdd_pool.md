@@ -9,6 +9,8 @@ nav_order: 2
 # Storage Pool 
 ## where your data will go
 
+----
+
 At this point, we assume you have at least 2 unassigned disks left, all mechanical drives.
 For your storage pool, consider RAIDZ1/2/3 or mirrored VDEVs
   - Internet searches will produce many opinions on whether you should go with Z1/2/3 or mirrored pools.

@@ -9,6 +9,8 @@ nav_order: 1
 # SSD Pool 
 ## Where your apps will go
 
+----
+
 Click the **Create Pool** button in the ***Storage*** tab of the TrueNAS GUI.
 
 1. **Select a name for your SSD pool**

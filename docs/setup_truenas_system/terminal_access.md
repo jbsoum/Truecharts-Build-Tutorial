@@ -1,7 +1,7 @@
 ---
 layout: default
 title: 5. Set up SSH Access
-parent: I. Setting up the TrueNAS System
+parent: I. TrueNAS System Setup
 grand_parent: TrueCharts Build Tutorial
 nav_order: 5
 ---

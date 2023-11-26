@@ -1,7 +1,7 @@
 ---
 layout: default
 title: 3. Accessing the Web GUI
-parent: I. Setting up the TrueNAS System
+parent: I. TrueNAS System Setup
 grand_parent: TrueCharts Build Tutorial
 nav_order: 3
 ---

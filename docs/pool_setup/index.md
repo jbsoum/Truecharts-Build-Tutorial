@@ -1,7 +1,7 @@
 ---
 title: II. Pool Setup
 has_children: true
-layout: minimal
+layout: default
 parent: TrueCharts Build Tutorial
 nav_order: 3
 ---
