@@ -1,12 +1,14 @@
 ---
 layout: default
-title: 2. Install from USB & Set up Admin Account
+title: 2. Install from USB
 parent: I. TrueNAS System Setup
 grand_parent: TrueCharts Build Tutorial
 nav_order: 2
 ---
 
 # Install TrueNAS from USB and Set up the Administrator Account
+
+----
 
 {: .sources }
 See here for the guide on first time setup of TrueNAS: [TrueNAS Installer Console Setup][truenasConsoleSetup]

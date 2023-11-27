@@ -1,13 +1,15 @@
 ---
 layout: default
-title: 5. Set up SSH Access
+title: 5. SSH Access Setup
 parent: I. TrueNAS System Setup
 grand_parent: TrueCharts Build Tutorial
 nav_order: 5
 ---
 
-
 # Set up SSH Access
+
+----
+
 - The idea here is that you're unlikely to have a monitor attached to your server at all times
 - There is a Shell you can access via the web GUI, but you should not expose that to the internet, and it's a bit finicky
 - So, without a monitor, how can you interact with the terminal? What if you're away from your desk?

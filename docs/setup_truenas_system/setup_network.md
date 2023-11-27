@@ -1,13 +1,14 @@
 ---
 layout: default
-title: 4. Set up the Server Network
+title: 4. Server Network Setup
 parent: I. TrueNAS System Setup
 grand_parent: TrueCharts Build Tutorial
 nav_order: 4
 ---
 
+# Set up the Server Network
 
-# Step Four: Set up the Server Network
+----
 
 1. **Set up the TrueNAS Scale Network**
 - Go to *Network*, and for the interface (ethernet port) which is connected to the internet, all the way to the right, click the little pencil icon to Configure

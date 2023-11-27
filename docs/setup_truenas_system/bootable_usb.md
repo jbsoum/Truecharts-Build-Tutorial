@@ -7,6 +7,10 @@ nav_order: 1
 ---
 
 # Set up TrueNAS SCALE Bootable USB
+
+----
+
+
 1. First, download the installer from here, this should be the latest Cobia build: [Download TrueNAS SCALE][downloadTruenasScale]
 1. Next, you'll want to burn this to a thumb drive, using something like [Rufus][rufus] on Windows.
 1. If on Windows, use [Rufus][rufus] to burn the iso to the USB and skip to step 8.

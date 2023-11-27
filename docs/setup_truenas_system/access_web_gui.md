@@ -7,6 +7,9 @@ nav_order: 3
 ---
 
 # Step 3: Accessing the Web GUI
+
+----
+
 1. After removing the USB and rebooting the system, you should be presented with the Console Setup screen
 
 ![ConsoleSetupMenuSCALE][imgConsoleSetupMenu]
